@@ -1,0 +1,15 @@
+
+Sub Main
+
+	:Loop
+	/if (!${Me.AbilityReady["Sneak"]}) {
+		/delay 9s ${Me.AbilityReady["Sneak"]}
+	}
+	/doability "Sneak"
+	/delay 1s
+	/doability "Begging"
+	/delay 1s
+	/if (${Cursor.ID}) /autoinv	
+	/goto :Loop
+	
+/return

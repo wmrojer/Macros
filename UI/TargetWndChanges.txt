@@ -1,0 +1,29 @@
+
+Target_HP 					0 -> 26
+Target_HPLabel 				13 -> 28
+Target_HPPercLabel 			13 -> 28
+
+TargetofTarget_HP 			26 -> 52	38 -> 64
+TargetofTarget_HPLabel 		38 -> 53 	50 -> 65
+TargetofTarget_HPPercLabel 	38 -> 53  	50 -> 65
+
+Target_BuffWindow 			52 -> -4	64 -> -4
+
+Size 									+ 12
+
+
+
+
+
+
+
+Target_HP 					2 -> 29
+Target_HPLabel 				17 -> 29
+Target_HPPercLabel 			17 -> 29
+
+Target_AggroPctPlayerLabel	33 -> 47
+
+Target_MQInfoLOS 			47 -> 59	28 -> 40
+Target_MQInfoNOLOS 			47 -> 59	28 -> 40
+
+Target_BuffWindow			60 -> 4

@@ -17,7 +17,6 @@
 #EVENT Follow "#1# tells the group, 'Follow #2#'"
 #EVENT Follow "#1# tell your party, 'Follow #2#'"
 SUB EVENT_Follow(line, ChatSender, eventParams)
-/if (${Debug} || ${Debug_Basics}) /echo |- EVENT_Follow ==>
   /if (${line.Find[,]}) /varset line ${line.Left[${Math.Calc[${line.Find[,]}-1]}]} ${line.Right[-${line.Find[,]}]}
   /if (!${checkEventArgs[${ChatSender},${line},UZ,${eventParams}]}) /return
   /declare SpawnToFollow string local ${c_eventArgData.Left[1].Upper}${c_eventArgData.Right[-1].Lower}
@@ -38,14 +37,29 @@ SUB EVENT_Follow(line, ChatSender, eventParams)
         /docommand ${ChatToggle} I cannot see [${FollowTarget}].
       } else {
         | -Stop assisting so we don't try to stick to the AssistTarget.
-        /if (${Assisting} || ${Me.Combat}) /call AssistOff
-          /varset Following TRUE
-          /varset rebuffTimer 25
-          /call AcquireFollow
+		/if (${Assisting} || ${Me.Combat}) /call AssistOff
+		/varset Following TRUE
+		/varset rebuffTimer 25
+		/call AcquireFollow
       }
     }
   }
-/if (${Debug} || ${Debug_Basics}) /echo <== EVENT_Follow -|
+/RETURN
+
+|----------------------------------------------------------------------------------------------------|
+|- Sets the distance your bots will follow you
+|- @param line: The line that called the event
+|- @param ChatSender: The PC who sent the command
+|- @param eventParams: distance /only,/not specifications
+#EVENT FollowDist "[#1#] FollowDist #2#"
+#EVENT FollowDist "<#1#> FollowDist #2#"
+#EVENT FollowDist "#1# tells you, 'FollowDist #2#'"
+SUB EVENT_FollowDist(line, ChatSender, eventParams)
+	/if (${line.Find[,]}) /varset line ${line.Left[${Math.Calc[${line.Find[,]}-1]}]} ${line.Right[-${line.Find[,]}]}
+	/if (!${checkEventArgs[${ChatSender},${line},UZ,${eventParams}]}) /return
+	/if (!${Int[${c_eventArgData}]}) /return
+	/echo Setting Follow Distance to ${c_eventArgData}
+	/squelch /netfollow ${c_eventArgData}
 /RETURN
 
 |----------------------------------------------------------------------------------------------------|
@@ -54,7 +68,6 @@ SUB EVENT_Follow(line, ChatSender, eventParams)
 |- Uses NetAdvPath if the follow target is one of your bots, or MoveUtils, if its someone elses.	-|		
 |----------------------------------------------------------------------------------------------------|
 SUB AcquireFollow
-/if (${Debug} || ${Debug_Basics}) /echo |- AcquireFollow ==>
 		/if (${SpawnCount[=${FollowTarget} radius ${MaxResponseDist}]}) {
 			/if (${FollowTarget.NotEqual[${Me.CleanName}]}) {
 				/if (${Stick.Active}) /squelch /stick off
@@ -72,19 +85,28 @@ SUB AcquireFollow
 				 | If the FollowTarget is a NetBot, and you're using NetAdvPath
 				/if (${NetBots[${FollowTarget}].ID} && ${NetAdvPath}) {
 					/if (${Spawn[id ${followTargetID}].LineOfSight}) {
+						/declare oldTargetID int local ${Target.ID}
 						/call TrueTarget ${followTargetID}
 						/squelch /netfollow on
+						/delay 1s ${NetAdvPath.Following}
+						/if (${oldTargetID} != 0) {
+							/call TrueTarget ${oldTargetID}
+						} else /squelch /target clear
 					}
 				} else {
 					/if (${Spawn[id ${followTargetID}].LineOfSight}) {
+						/declare oldTargetID int local ${Target.ID}
 						/call TrueTarget ${followTargetID}
 						/squelch /stick hold 20 uw
+						/delay 1s ${Stick.Active}
+						/if (${oldTargetID} != 0) {
+							/call TrueTarget ${oldTargetID}
+						} else /squelch /target clear
 					}
 				}
 				/varset FollowCheckTimer 20+${Math.Calc[${Math.Rand[${NetBots.Counts}]}/2]}
 			}
 		}
-/if (${Debug} || ${Debug_Basics}) /echo <== AcquireFollow -|
 /RETURN
 
 |----------------------------------------------------------------------------|
@@ -107,19 +129,17 @@ SUB Bind_StopFollowing(yLoc,xLoc)
 #EVENT Stop "#1# tells the group, 'Stop'"
 #EVENT Stop "#1# you tell your party, 'Stop'"
 SUB EVENT_Stop(line, ChatSender)
-/if (${Debug} || ${Debug_Basics}) /echo |- EVENT_Stop ==>
 	/if (${Following}) {
-    /if (${line.Find[,]}) /varset line ${line.Left[${Math.Calc[${line.Find[,]}-1]}]} ${line.Right[-${line.Find[,]}]}
-    /if (!${checkEventArgs[${ChatSender},${line},UZR]}) /return
-      | -Wait to get close to the followTarget.
-    /delay 1s ${Spawn[${FollowTarget}].Distance} < 25
-    | -Stop following
-    /if (${Stick.Active}) /squelch /stick off
-    /if (${NetAdvPath.Following}) /squelch /netfollow off
-    /varset FollowTarget NULL
-    /varset Following FALSE
-  }
-/if (${Debug} || ${Debug_Basics}) /echo <== EVENT_Stop -|
+		/if (${line.Find[,]}) /varset line ${line.Left[${Math.Calc[${line.Find[,]}-1]}]} ${line.Right[-${line.Find[,]}]}
+		/if (!${checkEventArgs[${ChatSender},${line},UZR]}) /return
+		  | -Wait to get close to the followTarget.
+		/delay 1s ${Spawn[${FollowTarget}].Distance} < 25
+		| -Stop following
+		/if (${Stick.Active}) /squelch /stick off
+		/if (${NetAdvPath.Following}) /squelch /netfollow off
+		/varset FollowTarget NULL
+		/varset Following FALSE
+	}
 /RETURN STOP
 
 |----------------------------------------------------------------------------|
@@ -127,7 +147,6 @@ SUB EVENT_Stop(line, ChatSender)
 #EVENT MoveHere "#1# tells you, 'Move to #2#'"
 #EVENT MoveHere "#1# tells the group, 'Move to #2#'"
 SUB EVENT_MoveHere(line, ChatSender, eventParams)
-/if (${Debug} || ${Debug_Basics}) /echo |- EVENT_MoveHere ==>
   /if (${line.Find[,]}) /varset line ${line.Left[${Math.Calc[${line.Find[,]}-1]}]} ${line.Right[-${line.Find[,]}]}
   /if (!${checkEventArgs[${ChatSender},${line},UZR,${eventParams}]}) /return
   /if (!${Int[${c_eventArgData}]}) /return
@@ -142,7 +161,6 @@ SUB EVENT_MoveHere(line, ChatSender, eventParams)
   /if (${Assisting}  || ${Me.Combat}) /call AssistOff
 
   /call MoveToLoc ${Spawn[id ${c_eventArgData}].Loc} 50 15
-/if (${Debug} || ${Debug_Basics}) /echo <== EVENT_MoveHere -|
 /RETURN
 
 |--------------------------------------------------------------------------------------|
@@ -159,7 +177,6 @@ SUB EVENT_MoveHere(line, ChatSender, eventParams)
 #EVENT bark "#1# tells the group, 'Bark at #2# #3#'"
 #EVENT bark "#1# tell your party, 'Bark at #2# #3#'"
 SUB EVENT_bark(line, ChatSender, msgTarget, barkMsg)
-/if (${Debug} || ${Debug_Basics}) /echo |- EVENT_Bark ==>
   /if (${line.Find[,]}) /varset line ${line.Left[${Math.Calc[${line.Find[,]}-1]}]} ${line.Right[-${line.Find[,]}]}
   /if (!${checkEventArgs[${ChatSender},${line},UZR,${barkMsg}]}) /return
   | -If msgTarget is not an ID, find TargetID.
@@ -230,7 +247,6 @@ SUB EVENT_bark(line, ChatSender, msgTarget, barkMsg)
       /docommand ${ChatToggle} Nothing seems to have happened...
     }
   }
-/if (${Debug} || ${Debug_Basics}) /echo <== EVENT_Bark -|
 /RETURN
 
 |------------------------------------------------------------|
@@ -239,8 +255,64 @@ SUB EVENT_bark(line, ChatSender, msgTarget, barkMsg)
 |- @param returnBark: What the NPC replied.					        -|
 |------------------------------------------------------------|
 #EVENT barkReturn "${barkTarget} #1#"
+#EVENT barkReturn "${barkTarget} begins to cast #*#"
 SUB EVENT_barkReturn(line, returnBark)
 	/varset barkReturned TRUE
+/RETURN
+
+|--------------------------------------------------------------------------------------|
+|- Commands bots to say something to a target.
+|- Targets can be designated by name, or ID
+|- @param line: '<Name> sayIt to MobName BarkMsg'
+|- @param msgTarget: The NPC you wish to say it to.
+|- @param sayMsg: What to say to the target.
+|- @param ChatSender: The command sender that requested the say.
+|- @param selectedBots: Bots specified to bark at npc.
+|- Use, '/SayIt MESSAGE', or 'SayIt to NAME MESSAGE' can be given in /bc, /g, or /tell.
+|--------------------------------------------------------------------------------------|
+#EVENT sayIt "<#1#> SayIt to #2# #3#"
+#EVENT sayIt "#1# tells the group, 'SayIt to #2# #3#'"
+#EVENT sayIt "#1# tell your party, 'SayIt to #2# #3#'"
+SUB EVENT_sayIt(line, ChatSender, msgTarget, sayMsg)
+  /if (${line.Find[,]}) /varset line ${line.Left[${Math.Calc[${line.Find[,]}-1]}]} ${line.Right[-${line.Find[,]}]}
+  /if (!${checkEventArgs[${ChatSender},${line},UZR,${sayMsg}]}) /return
+  | -If msgTarget is not an ID, find TargetID.
+  /if (!${Int[${msgTarget}]}) {
+    /if (${SpawnCount[npc =${msgTarget}]}) {
+      /varset msgTarget ${Spawn[npc =${msgTarget}].ID}
+    } else /if (${SpawnCount[pc =${msgTarget}]}) {
+      /varset msgTarget ${Spawn[npc =${msgTarget}].ID}
+    } else /if (${SpawnCount[pet =${msgTarget}]}) {
+      /varset msgTarget ${Spawn[npc =${msgTarget}].ID}
+    } else {
+      /echo Could not find a SpawnID for [${msgTarget}].
+      /varset msgTarget NULL
+      /return
+    }
+  }
+  /if (${c_eventArgChatSender.Equal[${Me}]}) /delay 2s
+
+  /if (${Spawn[id ${msgTarget}].Distance}>${MaxResponseDist}) {
+    /echo SayIt Failed - ${Spawn[id ${msgTarget}].CleanName} is > ${MaxResponseDist} distance
+    /return
+  }
+
+  /if (${Stick.Active}) /squelch /stick off
+  /if (${NetAdvPath.Following}) /squelch /netfollow off
+  /if (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) /call interrupt
+
+  /if (${Me.Invis}) /makemevisible
+  /call TrueTarget ${msgTarget}
+  /if (${Target.Distance} > 25) /call MoveToLoc ${Target.Y} ${Target.X} 50 5
+
+  | -Wait a moment, then say the message.
+  /delay ${Math.Rand[8]}
+  | -Reset sayMsg
+  /if (${c_eventArgData.Find[-]} && ${c_eventArgData.Find[|]}) {
+    /varset sayMsg ${c_eventArgData.Arg[1,-]}
+    /varset sayMsg ${c_eventArgData.Left[${Math.Calc[${c_eventArgData.Length} - 1].Int}]}
+  }
+  /say ${sayMsg}
 /RETURN
 
 |----------------------------------------------------------------------------|
@@ -324,7 +396,6 @@ SUB EVENT_clickIt(line, ChatSender, eventParams)
 #EVENT oldclickIt "#1# tells the group, 'OldClickIt #2#'"
 #EVENT oldclickIt "#1# tell your party, 'OldClickIt #2#'"
 SUB EVENT_oldclickIt(line, ChatSender, locToStart)
-  /if (${Debug} || ${Debug_Basics}) /echo |- EVENT_clickIt ==>
   /if (${line.Find[,]}) /varset line ${line.Left[${Math.Calc[${line.Find[,]}-1]}]} ${line.Right[-${line.Find[,]}]}
   /if (!${checkEventArgs[${ChatSender},${line},UZR,${locToStart}]}) /return
   | -Check LoS.
@@ -368,7 +439,6 @@ SUB EVENT_oldclickIt(line, ChatSender, locToStart)
           } else {
             | -Check the retryTimer.
             /if (${retryTimer}) {
-              /if (${Debug} || ${Debug_Basics}) /echo |- EVENT_clickIt -| Click attempt failed, retrying.
               /keypress back hold
               /delay 2
               /keypress forward
@@ -383,7 +453,6 @@ SUB EVENT_oldclickIt(line, ChatSender, locToStart)
       }
     }
   }
-  /if (${Debug} || ${Debug_Basics}) /echo <== EVENT_clickIt -|
 /RETURN
 
 |----------------------------------------------------------------------------|
@@ -396,7 +465,6 @@ SUB EVENT_oldclickIt(line, ChatSender, locToStart)
 #EVENT runThruZone "#1# tells the group, 'Run through zone#2#'"
 #EVENT runThruZone "#1# tell your party, 'Run through zone#2#'"
 SUB EVENT_runThruZone(line, ChatSender, eventParams)
-/if (${Debug} || ${Debug_Basics}) /echo |- EVENT_runThruZone ==>
   /if (${line.Find[,]}) /varset line ${line.Left[${Math.Calc[${line.Find[,]}-1]}]} ${line.Right[-${line.Find[,]}]}
   /if (!${checkEventArgs[${ChatSender},${line},UZR,${eventParams}]}) /return
   /if (${c_eventArgChatSender.Equal[${Me}]}) /delay 2s
@@ -436,22 +504,18 @@ SUB EVENT_runThruZone(line, ChatSender, eventParams)
       }
     }
   }
-/if (${Debug} || ${Debug_Basics}) /echo <== EVENT_runThruZone -|
 /RETURN
 
 |----------------------------------------|
 #EVENT dropInvis "<#1#> Drop Invis#*#"
 SUB EVENT_dropInvis(line, ChatSender)
-/if (${Debug} || ${Debug_Basics}) /echo |- EVENT_dropInvis ==>
   /if (!${checkEventArgs[${ChatSender},${line},UZR]}) /return
   /if (${Me.Invis}) /makemevisible
-/if (${Debug} || ${Debug_Basics}) /echo <== EVENT_dropInvis -|
 /RETURN
 
 |----------------------------------------|
 #EVENT dropBuff "<#1#> Drop Buff #2#"
 SUB EVENT_dropBuff(line, ChatSender, buffName)
-/if (${Debug} || ${Debug_Basics}) /echo |- EVENT_dropInvis ==>
   /if (!${checkEventArgs[${ChatSender},${line},UZR,${buffName}]}) /return
   /if (${c_eventArgData.Equal[All]}) {
     /declare i int local 1
@@ -464,20 +528,17 @@ SUB EVENT_dropBuff(line, ChatSender, buffName)
   } else {
     /removebuff ${c_eventArgData}
   }
-/if (${Debug} || ${Debug_Basics}) /echo <== EVENT_dropInvis -|
 /RETURN
 
 |----------------------------------------------------|
 |- Uses /exit on all bots, except the ChatSender.	  -|
-|- Use, /bc Exit		                                -|
+|- Use, /bc ExitGame		                                -|
 |----------------------------------------------------|
-#EVENT Exit "<#1#> Exit#*#"
-SUB EVENT_Exit(line, ChatSender)
-/if (${Debug} || ${Debug_Basics}) /echo |- EVENT_Exit ==>
-  /if (!${checkEventArgs[${ChatSender},${line},U]}) /return
-  /docommand ${ChatToggle} Bye!
-  /if (${Spawn[${ChatSender}].ID}!=${Me.ID}) /exit
-/if (${Debug} || ${Debug_Basics}) /echo <== EVENT_Exit -|
+#EVENT Exit "<#1#> ExitGame#2#"
+SUB EVENT_Exit(line, ChatSender, eventArgs)
+	/if (!${checkEventArgs[${ChatSender},${line},U,${eventArgs}]}) /return
+	/docommand ${ChatToggle} Bye!
+	/if (${Spawn[${ChatSender}].ID}!=${Me.ID}) /exit
 /RETURN
 
 |------------------------------------------------------------|
@@ -485,21 +546,17 @@ SUB EVENT_Exit(line, ChatSender)
 |------------------------------------------------------------|
 #EVENT LoadSpells "<#1#> Load Spells"
 SUB EVENT_LoadSpells(line, ChatSender)
-/if (${Debug} || ${Debug_Basics}) /echo |- EVENT_LoadSpells ==>
   /if (!${checkEventArgs[${ChatSender},${line},U]}) /return
   /if (${Me.Class.CanCast} && ${Defined[Default_SpellSet]}) {
     /declare spellsetMem_Timer timer local 300
     /docommand ${ChatToggle} Loading spells...
     /memspellset ${Default_SpellSet}
     :Memloop
-    /if (${Debug} || ${Debug_Basics}) /echo |- EVENT_LoadSpells -| :Memloop
 
     /call Background_Events
-    /if (${Debug} || ${Debug_Basics}) /echo spellsetMem_Timer = [${spellsetMem_Timer}]
     /if (${Window[SpellBookWnd].Open} && ${spellsetMem_Timer}) /goto :Memloop
     /if (${Me.Sitting}) /stand
   }
-/if (${Debug} || ${Debug_Basics}) /echo <== EVENT_LoadSpells -|
 /RETURN
 
 |--------------------------------------------------------|
@@ -508,12 +565,10 @@ SUB EVENT_LoadSpells(line, ChatSender)
 |--------------------------------------------------------|
 #EVENT CheckBuffs "<#1#> Check buff #2#"
 SUB EVENT_CheckBuffs(line, ChatSender, eventParams)
-/if (${Debug} || ${Debug_Basics}) /echo |- EVENT_CheckBuffs ==>
   /if (!${checkEventArgs[${ChatSender},${line},UZ,${eventParams}]}) /return
   /if (${Bool[${Me.Buff[${c_eventArgData}]}]}) {
       /docommand ${ChatToggle} ${Me.Buff[${c_eventArgData}].Duration.TotalSeconds} seconds left on [${c_eventArgData}].
   }
-/if (${Debug} || ${Debug_Basics}) /echo <== EVENT_CheckBuffs -|
 /RETURN
 
 |--------------------------------------------------------|
@@ -523,7 +578,6 @@ SUB EVENT_CheckBuffs(line, ChatSender, eventParams)
 |--------------------------------------------------------|
 #EVENT FindItems "<#1#> Find Item #2#"
 SUB EVENT_FindItems(line, ChatSender, ItemToFind)
-/if (${Debug} || ${Debug_Basics}) /echo |- EVENT_FindItems ==>
   /if (!${checkEventArgs[${ChatSender},${line},U,${ItemToFind}]}) /return
   /declare reportDelay int local 30
   |parse item link
@@ -600,12 +654,10 @@ SUB EVENT_FindItems(line, ChatSender, ItemToFind)
     /next i
   /if (${totalItems} > 0) /docommand ${ChatToggle} >> Found (${totalItems}) : [${ItemToFind}] <<
 
-/if (${Debug} || ${Debug_Basics}) /echo <== EVENT_FindItems -|
 /RETURN
 |--------------------------------------------------------|
 #EVENT FindItemCompact "<#1#> Find ItemC #2#"
 SUB EVENT_FindItemCompact(line, ChatSender, ItemToFind)
-  /if (${Debug} || ${Debug_Basics}) /echo |- EVENT_FindItems ==>
   /if (!${checkEventArgs[${ChatSender},${line},U,${ItemToFind}]}) /return
   /declare reportDelay int local 1
   /declare reportArray[50] string local NIL
@@ -714,7 +766,6 @@ SUB EVENT_FindItemCompact(line, ChatSender, ItemToFind)
   /next r
   |/if (${totalItems} > 0) /docommand ${ChatToggle} >> Found (${totalItems}) : [${ItemToFind}] <<
 
-  /if (${Debug} || ${Debug_Basics}) /echo <== EVENT_FindItems -|
 /RETURN
 |--------------------------------------------------------|
 |- Finditem with no summary data for easier viewing
@@ -877,7 +928,6 @@ SUB EVENT_FindSlot(line, ChatSender, SlotToFind)
 |------------------------------------------------------------|
 #EVENT CountBots "[#*#] Head Count"
 SUB EVENT_CountBots
-/if (${Debug} || ${Debug_Basics}) /echo |- EVENT_CountBots ==>
 	/if (!${NetBots.Counts}) {
 		/echo You must be connected to MQ2EQBC, and, MQ2NetBots, to use this function.
 	} else {
@@ -932,7 +982,6 @@ SUB EVENT_CountBots
 		/if (${OutOfZone.Arg[${i},,].Length}) /goto :next_OutOfZone
 		/echo ------------------------------------------
 	}
-/if (${Debug} || ${Debug_Basics}) /echo <== EVENT_CountBots -|
 /RETURN
 
 |----------------------------------------------------|
@@ -941,7 +990,6 @@ SUB EVENT_CountBots
 #EVENT Swap_Items "<#*#> Swap #1#"
 #EVENT Swap_Items "[MQ2] Swap #1#"
 SUB EVENT_Swap_Items(line, IniEntry)
-/if (${Debug} || ${Debug_Basics}) /echo |- Event Swap_Items ==>
 	| If I don't have a matching Ini entry.
 	/if (!${Ini[${Character_Ini},Swap Items,${IniEntry}].Length}) {
 		/echo \ay << Swap_Items: I have no listing for [${IniEntry}]. >>
@@ -957,7 +1005,6 @@ SUB EVENT_Swap_Items(line, IniEntry)
 		/declare slotToSwap string local
 		
 		:SwapLoop
-		/if (${Debug} || ${Debug_Basics}) /echo |- EVENT_Swap_Items -| Swaploop.
 		
 		/varset itemToSwap ${Ini[${Character_Ini},Swap Items,${IniEntry}].Arg[${i},/].Arg[1,|]}
 		/varset slotToSwap ${Ini[${Character_Ini},Swap Items,${IniEntry}].Arg[${i},/].Arg[2,|]}
@@ -983,7 +1030,6 @@ SUB EVENT_Swap_Items(line, IniEntry)
         /delay 2
       }
 			| Swap in item.
-      |/if (${Debug} || ${Debug_Basics})
       /echo Equipping [${itemToSwap}] ${slotToSwap}
 			/call SwapItem "${itemToSwap}" ${slotToSwap}
 			/delay 2
@@ -991,7 +1037,6 @@ SUB EVENT_Swap_Items(line, IniEntry)
 			/if (${Ini[${Character_Ini},Swap Items,${IniEntry}].Arg[${i},/].Length}) /goto :SwapLoop
 		}
 	}
-/if (${Debug} || ${Debug_Basics}) /echo <== Swap_Items -|
 /RETURN
 
 |----------------------------------------------------|
@@ -1008,18 +1053,25 @@ SUB EVENT_EndMacro
 |------------------------------------------------|
 #EVENT medOn "<#1#> MedBreak On#*#"
 SUB EVENT_medOn(line, ChatSender)
-/if (${Debug} || ${Debug_Basics}) /echo |- EVENT_medOn ==>
-  /if (!${checkEventArgs[${ChatSender},${line},UZR]}) /return
-  /if (${Me.Class.ShortName.NotEqual[BRD]}) {
-      /docommand ${ChatToggle} Meditating...
-      /varset medBreak TRUE
-      /if (${line.Find[ Hold]}) {
-        /varset medBreak_Hold TRUE
-      } else {
-        /varset medBreak_Hold FALSE
-      }
-  }
-/if (${Debug} || ${Debug_Basics}) /echo <== EVENT_medOn -|
+	/if (!${checkEventArgs[${ChatSender},${line},UZR]}) /return
+	/if (${Me.Class.ShortName.NotEqual[BRD]}) {
+		/if (!${medOn_combatBreak} || !${Me.CombatState.Equal[COMBAT]}) {  
+			/if ((${Me.PctMana} < 99 && ${Me.MaxMana} > 0) || (${Me.PctEndurance} < 99 && ${Me.MaxMana} == 0) || ${line.Find[ Hold]}) {
+				/if (${Me.MaxMana} > 0) {
+					/docommand ${ChatToggle} Meditating with ${Me.PctMana}% mana ...
+				} else {
+					/docommand ${ChatToggle} Meditating with ${Me.PctEndurance}% endurance ...
+				}
+				/varset medBreakCalled TRUE
+				/varset medBreak TRUE
+				/if (${line.Find[ Hold]}) {
+					/varset medBreak_Hold TRUE
+				} else {
+					/varset medBreak_Hold FALSE
+				}
+			}
+		}
+	}
 /RETURN
 
 |----------------------------------------------------|
@@ -1027,15 +1079,15 @@ SUB EVENT_medOn(line, ChatSender)
 |----------------------------------------------------|
 #EVENT medOff "<#1#> MedBreak Off"
 SUB EVENT_medOff(line, ChatSender)
-/if (${Debug} || ${Debug_Basics}) /echo |- EVENT_medOff ==>
   /if (!${checkEventArgs[${ChatSender},${line},UZR]}) /return
   /if (${medBreak}) {
     /docommand ${ChatToggle} Ending Medbreak.
     /varset medBreak FALSE
     /varset medBreak_Hold FALSE
+	/varset medBreakCalled FALSE
     /if (${Me.Sitting}) /stand
+	/if (${Following} && !${Assisting}) /call AcquireFollow
   }
-/if (${Debug} || ${Debug_Basics}) /echo <== EVENT_medOff -|
 /RETURN
 
 |--------------------------------------------------------------------------------|
@@ -1043,42 +1095,54 @@ SUB EVENT_medOff(line, ChatSender)
 |- Ends MedBreak mode at 99% mana, unless, 'MedBreak hold command is given.		-|
 |--------------------------------------------------------------------------------|
 SUB check_MedBreak
-/if (${Debug} || ${Debug_Basics}) /echo |- check_MedBreak ==>
 	| If End MedBreak in Combat (On/Off)=On, and a netbot is in combat, call medOff
 	/if (${medOn_combatBreak} && ${Me.CombatState.Equal[COMBAT]}) {
-    /docommand ${ChatToggle} Ending Medbreak.
-    /varset medBreak FALSE
-    /varset medBreak_Hold FALSE
-    /if (${Me.Sitting}) /stand
+		/if (${medBreakCalled}) /docommand ${ChatToggle} Ending med break due to combat.
+		/varset medBreak FALSE
+		/varset medBreak_Hold FALSE
+		/varset medBreakCalled FALSE
+		/if (${Me.Sitting}) /stand
+		/if (${Following} && !${Assisting}) /call AcquireFollow
 	}
 	/if (!${Me.Feigning}) {
+
 		/if (!${medbreak_Popup_Timer}) {
 			/popup ***Meditating***
 			/varset medbreak_Popup_Timer 30
 		}
-		| end MedBreak when we are full mana or end for melee, unless hold is engaged
+		| end MedBreak when we are full mana or endurance for melee, unless hold is engaged
 		/if (${medBreak} && !${medBreak_Hold} && (${Me.PctMana} >= 99 || (${Me.MaxMana} ==0 && ${Me.PctEndurance}>=99))) {
-			/docommand ${ChatToggle} Full Mana/Endurance, ending MedBreak.
+			/if (${medBreakCalled}) {
+				/if (${Me.MaxMana} == 0) {
+					/docommand ${ChatToggle} Full Endurance, ending med break.
+				} else {
+					/docommand ${ChatToggle} Full Mana, ending med break.
+				}
+			}
 			/if (${Me.Sitting}) /stand
 			/varset medBreak FALSE
 			/varset medBreak_Hold FALSE				
+			/varset medBreakCalled FALSE
+			/if (${Following} && !${Assisting}) /call AcquireFollow
 		} else {
-      /if (!${Me.Sitting} && !${Me.Casting.ID} && !${Me.Moving}) /sit
+			/if (!${Me.Sitting} && !${Me.Casting.ID} && !${Me.Moving}) {
+				| pause /stick and /netfollow when we sit down
+				/if (${Stick.Active}) /squelch /stick off
+				/if (${NetAdvPath.Following}) /squelch /netfollow off
+				/sit
+			}
 		}
 	}
-/if (${Debug} || ${Debug_Basics}) /echo <== check_MedBreak -|
 /RETURN
 
 |--------------------------------------------------------------------------------|
 #EVENT set_AAXP "<#1#> Set AA XP #2#"
 #EVENT set_AAXP "[#1#] Set AA XP #2#"
 SUB EVENT_set_AAXP(line, ChatSender, eventParams)
-/if (${Debug} || ${Debug_Basics}) /echo |- set_AAXP ==>
-  /if (!${checkEventArgs[${ChatSender},${line},U,${eventParams}]}) /return
-  /varset eventParams ${Int[${c_eventArgData}]}
-  /echo Setting AA XP [${eventParams}%].
-  /alternateadv ON ${eventParams}
-/if (${Debug} || ${Debug_Basics}) /echo <== set_AAXP -|
+	/if (!${checkEventArgs[${ChatSender},${line},U,${eventParams}]}) /return
+	/varset eventParams ${Int[${c_eventArgData}]}
+	/echo Setting AA XP [${eventParams}%].
+	/alternateadv ON ${eventParams}
 /RETURN
 
 |--------------------------------------------------------------------------------|
@@ -1099,27 +1163,25 @@ SUB EVENT_fixCorpses
 #event Consent "#1# tells the raid#*#Consent #2#'"
 #event Consent "<#1#> Consent #2#"
 SUB Event_Consent(line, ChatSender, ConsentTarget)
-  /if (${ConsentTarget.NotEqual[${Me.CleanName}]}) /consent ${ConsentTarget}
+	/if (${ConsentTarget.NotEqual[${Me.CleanName}]}) /consent ${ConsentTarget}
 /RETURN
 
 |--------------------------------------------------------------------------------|
 #event gatherCorpses "[MQ2] Gather corpse#*#"
 SUB event_gatherCorpses
-/if (${Debug} || ${Debug_Basics}) /echo |- EVENT_gatherCorpses ==>
-  /if (${Raid.Members}) {
-    /rs Consent ${Me.CleanName}
-  } else {
-    /bc Consent ${Me.CleanName}
-  }
+	/if (${Raid.Members}) {
+		/rs Consent ${Me.CleanName}
+	} else {
+		/bc Consent ${Me.CleanName}
+	}
 	/declare i int local
 	/for i 1 to ${SpawnCount[pccorpse radius 100]}
-    /call TrueTarget ${Spawn[${NearestSpawn[${i},pccorpse radius 100]}].ID}
-    /delay 2
-    /corpse
-    /delay 1s ${Target.Distance} < 20
+		/call TrueTarget ${Spawn[${NearestSpawn[${i},pccorpse radius 100]}].ID}
+		/delay 2
+		/corpse
+		/delay 1s ${Target.Distance} < 20
 	/next i
 	/squelch /target clear
-/if (${Debug} || ${Debug_Basics}) /echo <== EVENT_gatherCorpses -|
 /RETURN
 
 |-------------------------------
@@ -1127,21 +1189,19 @@ SUB event_gatherCorpses
 |-------------------------------
 #EVENT ClickYes	"<#1#> Click #2#"
 SUB EVENT_ClickYes(line, ChatSender, eventParams)
-/if (${Debug} || ${Debug_Basics}) /echo |- EVENT_ClickYes ==>
-  /if (!${checkEventArgs[${ChatSender},${line},U,${eventParams}]}) /return
-  /declare buttonToClick string local ${If[${c_eventArgData.Find[yes]},Yes,No]}
-  /declare miscTimer timer local 5s
-  /if (${c_eventArgChatSender.Equal[${Me}]}) /delay 2s
-  :clickButton
-  /if (${Window[ConfirmationDialogBox].Open}) {
-    /notify ConfirmationDialogBox ${buttonToClick}_Button leftmouseup
-  } else /if (${Window[LargeDialogWindow].Open}) {
-    /notify LargeDialogWindow LDW_${buttonToClick}Button leftmouseup
-  }
-  /if (${miscTimer}) {
-    /if (${Window[ConfirmationDialogBox].Open} || ${Window[LargeDialogWindow].Open}) /goto :clickButton
-  }
-/if (${Debug} || ${Debug_Basics}) /echo <== EVENT_ClickYes -|	
+	/if (!${checkEventArgs[${ChatSender},${line},U,${eventParams}]}) /return
+	/declare buttonToClick string local ${If[${c_eventArgData.Find[yes]},Yes,No]}
+	/declare miscTimer timer local 5s
+	/if (${c_eventArgChatSender.Equal[${Me}]}) /delay 2s
+	:clickButton
+	/if (${Window[ConfirmationDialogBox].Open}) {
+		/notify ConfirmationDialogBox ${buttonToClick}_Button leftmouseup
+	} else /if (${Window[LargeDialogWindow].Open}) {
+		/notify LargeDialogWindow LDW_${buttonToClick}Button leftmouseup
+	}
+	/if (${miscTimer}) {
+		/if (${Window[ConfirmationDialogBox].Open} || ${Window[LargeDialogWindow].Open}) /goto :clickButton
+	}
 /RETURN
 
 |--------------------------------------------------------|
@@ -1154,7 +1214,6 @@ SUB EVENT_ClickYes(line, ChatSender, eventParams)
 #EVENT gate "#1# tell your party, 'Gate'"
 #EVENT gate "#1# tells the group, 'Gate'"
 SUB EVENT_gate(line, ChatSender)
-/if (${Debug} || ${Debug_Basics}) /echo |- EVENT_Gate ==>
   /if (${line.Find[,]}) /varset line ${line.Left[${Math.Calc[${line.Find[,]}-1]}]} ${line.Right[-${line.Find[,]}]}
   /if (!${checkEventArgs[${ChatSender},${line},UZ,""]}) /return
   /if (!${Me.Book[gate]}) {
@@ -1187,7 +1246,6 @@ SUB EVENT_gate(line, ChatSender)
 #EVENT Evacuate "#1# tell your party, 'Evac'"
 #EVENT Evacuate "#1# tells the group, 'Evac'"
 SUB EVENT_Evacuate(line, ChatSender)
-/if (${Debug} || ${Debug_Basics}) /echo |- EVENT_Evacuate ==>
   /if (${Select[${Me.Class.ShortName},DRU,WIZ]}) {
     /if (${line.Find[,]}) /varset line ${line.Left[${Math.Calc[${line.Find[,]}-1]}]} ${line.Right[-${line.Find[,]}]}
     /if (!${checkEventArgs[${ChatSender},${line},UZ,""]}) /return
@@ -1208,26 +1266,36 @@ SUB EVENT_Evacuate(line, ChatSender)
       /docommand ${ChatToggle} I am not able to Evac at this time.
     }
   }
-/if (${Debug} || ${Debug_Basics}) /echo <== EVENT_Evacuate -|
 /RETURN
 
 |----------------------------------------|
 |- Automatically accepts raid invites.	-|
 |----------------------------------------|
-#EVENT RaidAccept "#*#invites you to join a raid.#*#"
-SUB EVENT_RaidAccept
-  /delay 5
-  /notify ConfirmationDialogBox Yes_Button leftmouseup
-  /delay 5
-  /raidaccept
+#EVENT RaidAccept "#1# invites you to join a raid.#*#"
+SUB EVENT_RaidAccept(line, ChatSender)
+	/if (!${checkEventArgs[${ChatSender},${line},U,""]}) /return
+	/if (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) {
+		/call interrupt
+		/delay 5s !${Me.Casting.ID}
+	}
+	/declare retryTimer timer local 5s
+	:clickRaid
+	/delay 5
+	/if (${Window[ConfirmationDialogBox].Open}) {
+		/notify ConfirmationDialogBox Yes_Button leftmouseup
+	}
+	/delay 5
+	/raidaccept
+	/delay 5
+	/if (${retryTimer} && ${Window[ConfirmationDialogBox].Open}) /goto :clickRaid
+
 /RETURN
 
 |----------------------------------------|
 |- Automatically accepts group invites.	-|
 |----------------------------------------|
-#EVENT Invite "#1# invites you to join a group."
+#EVENT Invite "#1# invites you to join a group.#*#"
 SUB EVENT_Invite(line, ChatSender)
-/if (${Debug}) /echo |- EVENT_Invite ==>
   /if (!${checkEventArgs[${ChatSender},${line},U,""]}) /return
   /if (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) {
     /call interrupt
@@ -1246,7 +1314,25 @@ SUB EVENT_Invite(line, ChatSender)
       /echo Failed to join the group.
     }
   }
-/if (${Debug}) /echo <== EVENT_Invite -|
+/RETURN
+
+|----------------------------------------|
+|- Automatically accepts trades.    	-|
+|----------------------------------------|
+#EVENT AcceptTrade "#1# has offered you a#*#"
+#EVENT AcceptTrade "#1# adds some coins to the trade#*#"
+#EVENT AcceptTrade "<#1#> Accept Trade#*#"
+SUB EVENT_AcceptTrade(line, ChatSender)
+	/if (!${checkEventArgs[${ChatSender},${line},U,""]}) /return
+
+	/declare tradeTimer timer local 5s
+	:clickTrade
+	/delay 1s
+	/if (${Window[TradeWnd].Open}) {
+		/notify TradeWnd TRDW_Trade_Button leftmouseup
+	}
+	/if (${tradeTimer} && ${Window[TradeWnd].Open}) /goto :clickTrade
+
 /RETURN
 
 |--------------------------------------------------------------------------------------------|
@@ -1256,11 +1342,8 @@ SUB EVENT_Invite(line, ChatSender)
 |--------------------------------------------------------------------------------------------|
 #EVENT saveGroup "<#1#> Save Group #2#"
 SUB EVENT_saveGroup(line, ChatSender, eventParams)
-/if (${Debug}) /echo |- EVENT_saveGroup ==>
   /if (!${checkEventArgs[${ChatSender},${line},U,${eventParams}]}) /return
-  /if (!${Select[${Group.Leader},${Me}]}) {
-    /if (${Debug}) /echo I am not a group leader, skipping.
-  } else {
+  /if (${Select[${Group.Leader},${Me}]}) {
     /echo Preparing to save...
     /declare groupName string local ${c_eventArgData}
     /if (${groupName.Right[1].Equal[ ]}) /varset groupName ${groupName.Left[${Math.Calc[${groupName.Length}-1]}]}
@@ -1308,7 +1391,6 @@ SUB EVENT_saveGroup(line, ChatSender, eventParams)
       }
     /next i
   }
-/if (${Debug}) /echo <== EVENT_saveGroup -|
 /RETURN
 
 |---------------------------------------------------------|
@@ -1317,7 +1399,6 @@ SUB EVENT_saveGroup(line, ChatSender, eventParams)
 #EVENT listGroups "<#1#> List Groups"
 #EVENT listGroups "<#1#> ListGroups"
 SUB EVENT_listGroups
-/if (${Debug}) /echo |- listGroups ==>
 	| -Check Group_Ini for groups on this server.
 	/if (!${Ini[${Group_Ini}].Find[${MacroQuest.Server}]}) {
 		/echo You don't have any group setups saved on, [${MacroQuest.Server}].
@@ -1345,7 +1426,6 @@ SUB EVENT_listGroups
 		/if (${Ini[${Group_Ini}].Arg[${i},|].Length}) /goto :next_groupListing
 		/echo
 	}
-/if (${Debug}) /echo <== listGroups -|
 /RETURN
 
 |------------------------------------------------|
@@ -1355,7 +1435,6 @@ SUB EVENT_listGroups
 |------------------------------------------------|
 #EVENT groupUp "<#1#> Group #2#"
 SUB EVENT_groupUp(line, ChatSender, createGroup)
-/if (${Debug}) /echo |- EVENT_groupUp ==>
   /if (!${checkEventArgs[${ChatSender},${line},U,${createGroup}]}) /return
   /if (${c_eventArgChatSender.Equal[${Me.Name}]}) {
     /squelch /bca //raiddisband
@@ -1401,7 +1480,6 @@ SUB EVENT_groupUp(line, ChatSender, createGroup)
   /varcalc i ${i}+1
   /if (${${IniMode}[${Group_Ini}].Arg[${i},|].Length}) /goto :nextGroupListing
  :skip
-/if (${Debug}) /echo <== EVENT_groupUp -|
 /RETURN
 
 |---------------------------|
@@ -1479,41 +1557,41 @@ SUB EVENT_exp_group(line, ChatSender, expToggle)
 |---------------------------|
 #EVENT reportMana "<#1#> Report mana#*#"
 SUB EVENT_reportMana(line,ChatSender)
-/if (${Me.Class.CanCast}) {
-  /if (!${checkEventArgs[${ChatSender},${line},UZ,""]}) /return
-  /if (${Me.PctMana}<100) /docommand ${ChatToggle} ${Me.PctMana}m
-}
+	/if (${Me.Class.CanCast}) {
+		/if (!${checkEventArgs[${ChatSender},${line},UZ,""]}) /return
+		/if (${Me.PctMana}<100) /docommand ${ChatToggle} ${Me.PctMana}m
+	}
 /RETURN
 
 |---------------------------|
-#EVENT campDesktop "<#1#> CampDesktop"
-SUB campDesktop(line,ChatSender)
-  /if (!${checkEventArgs[${ChatSender},${line},UZ,${expToggle}]}) /return
-  /camp desktop
-  /endmacro
+#EVENT campDesktop "<#1#> CampDesktop #2#"
+SUB EVENT_campDesktop(line,ChatSender,eventArgs)
+	/if (!${checkEventArgs[${ChatSender},${line},UZ,${eventArgs}]}) /return
+	/camp desktop
+	/endmacro
 /RETURN
 
 Sub basics_Setup
 /call iniToVarV "${advSettings_Ini},Debug,Debug Basics (On/Off)" Debug_Basics bool outer
-/if (${Debug} || ${Debug_Basics}) /echo |- basics_Setup ==>
 
 	/if (!${Defined[Following]}) /declare Following bool global FALSE
 	/if (!${Defined[FollowTarget]}) /declare FollowTarget string global NULL
 	/declare FollowCheckTimer timer outer
 
-  /if (!${Defined[barkTarget]}) /declare barkTarget string outer
-  /if (!${Defined[barkReturned]}) /declare barkReturned bool outer FALSE
+	/if (!${Defined[barkTarget]}) /declare barkTarget string outer
+	/if (!${Defined[barkReturned]}) /declare barkReturned bool outer FALSE
 
 	/declare event_counter int outer 0
 
-  /declare c_checkSelectedBots  bool outer
+	/declare c_checkSelectedBots  bool outer
 	/declare c_eventArg           bool outer
 	/declare c_eventArgChatSender string outer
-  /declare c_eventArgData       string outer
-  /declare c_argueString        string outer
+	/declare c_eventArgData       string outer
+	/declare c_argueString        string outer
 
 	/declare medBreak bool outer FALSE
 	/declare medBreak_Hold bool outer FALSE
+	/declare medBreakCalled bool outer FALSE
 	/declare medbreak_Popup_Timer timer outer
 	/declare clickitRandomDelay int outer 7
 
@@ -1528,7 +1606,9 @@ Sub basics_Setup
 	/declare LeashLength int outer 100
 	/if (${Ini[${genSettings_Ini},General,Leash Length].Length} && ${Int[${Ini[${genSettings_Ini},General,Leash Length]}]}) /call iniToVarV "${genSettings_Ini},General,Leash Length" LeashLength int outer
 	/if (${Ini[${genSettings_Ini},General,End MedBreak in Combat(On/Off)].Length}) /call iniToVarV "${genSettings_Ini},General,End MedBreak in Combat(On/Off)" medOn_combatBreak bool outer
-  /if (${Ini[${genSettings_Ini},General,AutoMedBreak PctMana].Length}) /call iniToVarV "${genSettings_Ini},General,AutoMedBreak PctMana" autoMedPctMana int outer
+	/if (${Ini[${Character_Ini},General,End MedBreak in Combat(On/Off)].Length}) /call iniToVarV "${Character_Ini},General,End MedBreak in Combat(On/Off)" medOn_combatBreak bool outer
+	/if (${Ini[${genSettings_Ini},General,AutoMedBreak PctMana].Length}) /call iniToVarV "${genSettings_Ini},General,AutoMedBreak PctMana" autoMedPctMana int outer
+	/if (${Ini[${Character_Ini},General,AutoMedBreak PctMana].Length}) /call iniToVarV "${Character_Ini},General,AutoMedBreak PctMana" autoMedPctMana int outer
 	| -Add Groups_Ini file path
 	/if (!${Ini[${MacroData_Ini},File Paths,Saved Groups].Length}) /call WriteToIni "${MacroData_Ini},File Paths,Saved Groups" "e3 Macro Inis\Saved Groups.ini" 1
 	| -Import Groups_Ini.
@@ -1539,114 +1619,122 @@ Sub basics_Setup
 	} else {
 		/declare Group_Ini string outer ${Ini[${MacroData_Ini},File Paths,Saved Groups]}
 	}
-/if (${Debug} || ${Debug_Basics}) /echo <== basics_Setup -|
 /return
 
 
 
 Sub basics_Background_Events
 	/doevents Follow
+	/doevents FollowDist
 	/doevents Stop
-  /doevents MoveHere
-  /doevents clickIt
-  /doevents oldclickIt
-  /doevents bark
-  /doevents reportMana
-  /doevents groupUp
-  /doevents listGroups
-  /doevents saveGroup
-  /doevents Invite
-  /doevents RaidAccept
-  /doevents Evacuate
-  /doevents gate
-  /doevents ClickYes
-  /doevents gatherCorpses
-  /doevents addConsent
-  /doevents Consent
-  /doevents fixCorpses
-  /doevents set_AAXP
-  /doevents medOff
-  /doevents medOn
-  /doevents EndMacro
-  /doevents castItem
-  /doevents Swap_Items
-  /doevents CountBots
-  /doevents FindMissingItem
-  /doevents FindItems
-  /doevents FindItemCompact
-  /doevents FindSlot
-  /doevents CheckBuffs
-  /doevents LoadSpells
-  /doevents Exit
-  /doevents dropInvis
-  /doevents dropBuff
-  /doevents runThruZone
-  /doevents macroHelp
-  /doevents exp_group
-  /doevents campdesktop
-|		/varset event_counter 1
-|	} else {
-|		/varcalc event_counter ${event_counter}+1
-|	}
+	/doevents MoveHere
+	/doevents clickIt
+	/doevents oldclickIt
+	/doevents bark
+	/doevents sayIt
+	/doevents reportMana
+	/doevents groupUp
+	/doevents listGroups
+	/doevents saveGroup
+	/doevents Invite
+	/doevents RaidAccept
+	/doevents AcceptTrade
+	/doevents Evacuate
+	/doevents gate
+	/doevents ClickYes
+	/doevents gatherCorpses
+	/doevents addConsent
+	/doevents Consent
+	/doevents fixCorpses
+	/doevents set_AAXP
+	/doevents medOff
+	/doevents medOn
+	/doevents EndMacro
+	/doevents castItem
+	/doevents Swap_Items
+	/doevents CountBots
+	/doevents FindMissingItem
+	/doevents FindItems
+	/doevents FindItemCompact
+	/doevents FindSlot
+	/doevents CheckBuffs
+	/doevents LoadSpells
+	/doevents ExitGame
+	/doevents dropInvis
+	/doevents dropBuff
+	/doevents runThruZone
+	/doevents macroHelp
+	/doevents exp_group
+	/doevents campDesktop
 /return
 
 SUB basics_MacroSettings
-/if (${Debug}) /echo |- basics_MacroSettings ==>
 	/call WriteToIni "${advSettings_Ini},Debug,Debug Basics (On/Off)" Off
 	/call WriteToIni "${genSettings_Ini},General,Max Response Distance" 500
 	/call WriteToIni "${genSettings_Ini},General,Leash Length" 250
 	/call WriteToIni "${genSettings_Ini},General,End MedBreak in Combat(On/Off)" On
-  /call WriteToIni "${genSettings_Ini},General,AutoMedBreak PctMana" 0
+	/call WriteToIni "${genSettings_Ini},General,AutoMedBreak PctMana" 0
 
 	/call WriteToIni "${genSettings_Ini},ExpGroup,NoKS_WeaponSet" NoExp
 	/call WriteToIni "${genSettings_Ini},ExpGroup,NoKS_SpellSet" NoExp
 	/call WriteToIni "${genSettings_Ini},ExpGroup,KS_WeaponSet" Main
 	/call WriteToIni "${genSettings_Ini},ExpGroup,KS_SpellSet" Exp
-
-/if (${Debug}) /echo <== basics_MacroSettings -|
 /RETURN
 
 SUB basics_CharacterSettings
+	| Could do ${Me.MaxMana} > 0 but that would include Bard
+	/if (${Select[${Me.Class.ShortName},BST,CLR,DRU,ENC,MAG,PAL,NEC,RNG,SHD,SHM,WIZ]}) {
+		| Classes with mana
+		/call WriteToIni "${Character_Ini},General,AutoMedBreak PctMana" ${If[${Select[${Me.Class.ShortName},BST,PAL,RNG,SHD]},20,60]}
+		/call WriteToIni "${Character_Ini},General,End MedBreak in Combat(On/Off)" ${If[${Select[${Me.Class.ShortName},BST,PAL,RNG,SHD]},on,Off]}
+	} else {
+		| Classes without mana
+		/call WriteToIni "${Character_Ini},General,AutoMedBreak PctMana" 0
+		/call WriteToIni "${Character_Ini},General,End MedBreak in Combat(On/Off)" On
+	}
 /RETURN
 
 Sub basics_Aliases
-/if (${Debug}) /echo |- basics_Aliases ==>
 	/noparse /squelch /alias /followon /bc [+g+]Follow ${Me.CleanName}
 	/noparse /squelch /alias /followme /bc [+g+]Follow ${Me.CleanName}
 	/noparse /squelch /alias /followit /bc [+g+]Follow ${Target.CleanName}
-  /squelch /alias /followoff /bc [+r+]Stop
+	/squelch /alias /FollowDist /bc [+g+]FollowDist
+	/squelch /alias /FollowClose /bc [+g+]FollowDist 10
+	/squelch /alias /FollowFar /bc [+g+]FollowDist 30
+	/squelch /alias /followoff /bc [+r+]Stop
 	/squelch /alias /stop /bc [+r+]Stop
-  /noparse /squelch /alias /stopf /bcaa //StopFollowing ${Me.Y} ${Me.X}
-  /noparse /squelch /alias /mtm /bc Move to ${Me.ID}
-  /noparse /squelch /alias /movetome /bc Move to ${Me.ID}
+	/noparse /squelch /alias /stopf /bcaa //StopFollowing ${Me.Y} ${Me.X}
+	/noparse /squelch /alias /mtm /bc Move to ${Me.ID}
+	/noparse /squelch /alias /movetome /bc Move to ${Me.ID}
 	/noparse /squelch /alias /mtt /bc Move to ${Target.ID}
-  /noparse /squelch /alias /movetotarget /bc Move to ${Target.ID}
+	/noparse /squelch /alias /movetotarget /bc Move to ${Target.ID}
 	/noparse /squelch /alias /Bark /bc Bark at ${Target.ID}
-  /squelch /alias /ClickIt /bc Click It
-  /noparse /squelch /alias /oClickIt /bc OldClickit ${Me.Loc.Replace[ ,]}
+	/noparse /squelch /alias /SayIt /bc SayIt to ${Target.ID}
+	/squelch /alias /ClickIt /bc Click It
+	/noparse /squelch /alias /oClickIt /bc OldClickit ${Me.Loc.Replace[ ,]}
 	/noparse /squelch /alias /RunThruZone /bc Run through zone at ${Me.Loc.Replace[ ,]},${Me.Heading.Degrees}
 	/noparse /squelch /alias /RunThroughZone /bc Run through zone at ${Me.Loc.Replace[ ,]},${Me.Heading.Degrees}
 	|/noparse /squelch /alias /RTZ /bc Run through zone at ${Me.Loc.Replace[ ,]},${Me.Heading.Degrees}
-  /noparse /squelch /alias /RTZ /bc Run through zone
+	/noparse /squelch /alias /RTZ /bc Run through zone
 	/squelch /alias /ClickYes /bc Click yes
 	/squelch /alias /Yes /bc Click yes
 	/squelch /alias /ClickNo /bc Click No
 	/squelch /alias /No /bc Click No
 	/squelch /alias /DropInvis /bc Drop Invisibility
-	/squelch /alias /BotExit /bc Exit
+	/squelch /alias /BotExit /bc ExitGame
 	/squelch /alias /Gate /bc Gate
 	/squelch /alias /Evac /bc Evac
 	/squelch /alias /LoadSpells /bc Load Spells
 	/squelch /alias /DropBuff /bc Drop Buff
 	/squelch /alias /CheckBuff /bc Check Buff
-  /squelch /alias /FindItemC /bc Find ItemC
+	/squelch /alias /FindItemC /bc Find ItemC
 	/squelch /alias /FindItem /bc Find Item
-  /squelch /alias /FindSlot /bc Find Slot
-  /squelch /alias /fds /bc Find Slot
-  /squelch /alias /fdi /bc Find Item
-  /squelch /alias /fic /bc Find ItemC
-  /squelch /alias /FindMissingItem /bc Find Missing Item
-  /squelch /alias /fmi /bc Find Missing Item
+	/squelch /alias /FindSlot /bc Find Slot
+	/squelch /alias /fds /bc Find Slot
+	/squelch /alias /fdi /bc Find Item
+	/squelch /alias /fic /bc Find ItemC
+	/squelch /alias /FindMissingItem /bc Find Missing Item
+	/squelch /alias /fmi /bc Find Missing Item
 	/noparse /squelch /alias /FindIt /bc Find Item ${Cursor}
 	/squelch /alias /CountBots /echo Head Count
 	/squelch /alias /Count /echo Head Count
@@ -1668,5 +1756,4 @@ Sub basics_Aliases
 	/squelch /alias /ResetCorpses /bc Fix Corpses
 	/squelch /alias /gathercorpses /echo Gather Corpses
 	/squelch /alias /mana /bc Report Mana
-/if (${Debug}) /echo <== basics_Aliases -|
 /return

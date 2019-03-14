@@ -1,0 +1,14 @@
+
+Sub Main
+
+	:Loop
+	/if (!${Me.AbilityReady["Feign Death"]}) {
+		/delay 9s ${Me.AbilityReady["Feign Death"]}
+	}
+	/doability "Feign Death"
+	/delay 1s
+	/stand
+	/delay 9s
+	/goto :Loop
+	
+/return

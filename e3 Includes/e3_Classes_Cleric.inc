@@ -3,10 +3,11 @@
 |----------------------------------------------------------------------------|
 SUB check_Yaulp
 /if (${Debug}) /echo |- check_clrYaulp ==>
-	/if (${AutoYaulp} && !${medBreak})  {
+	| Makes no sense to keep casting Yaulp when not in combat before lvl 56
+	/if (${AutoYaulp} && !${medBreak} && (${Me.CombatState.Equal[COMBAT]} || (${Me.Level} > 55)))  {
 		/declare castName string local ${yaulpSpell.Arg[1,/]}
 		/if (!${Bool[${Me.Buff[${castName}]}]} && ${Me.PctMana} < 95 && ${Spell[${castName}].NewStacks}) {
-			/if (${Target.ID}) /declare tempTarget int local ${Target.ID}
+			|/if (${Target.ID}) /declare tempTarget int local ${Target.ID}
 			/casting "${castName}" -invis
 		}
 	}

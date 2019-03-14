@@ -129,7 +129,6 @@ sub event_charmOff(line, ChatSender)
 #event toggleMez "#1# tells you, 'Mez #2#'"
 sub event_toggleMez(line, ChatSender, mezToggle)
   /if (${Me.Class.ShortName.Equal[ENC]} || ${Me.Class.ShortName.Equal[BRD]}) {
-    /if (${Debug} || ${Debug_Ench}) /echo |- remove_RuneTarget ==>
       /if (${mezToggle.Equal[on]}) {
         /varset autoMez TRUE
         /docommand ${ChatToggle} << Mezzing Enabled >>
@@ -137,7 +136,6 @@ sub event_toggleMez(line, ChatSender, mezToggle)
         /varset autoMez FALSE
         /docommand ${ChatToggle} << Mezzing Disabled >>
     }
-    /if (${Debug}) /echo <== remove_RuneTarget -|
   }
 /return
 |----------------------------------------------------------------------------|
@@ -214,27 +212,35 @@ Sub check_charm
 | Mez mobs in ae radius that are not assist target
 sub check_mez
 /if (${Debug} || ${Debug_Ench}) /echo |- check_Mez ==>
-  /if (${autoMez}) {
+  | !!!!! Added check for Assisting before starting to mez mobs !!!!!!
+  /if (${autoMez} && ${Assisting}) {
     /declare i int local
     /declare s int local
     /declare mezTarg int local
     /if (!${SpawnCount[playerstate 4 npc targetable radius ${AE_Radius}]}) /return
     /for i 1 to ${SpawnCount[playerstate 4 npc targetable radius ${AE_Radius}]}
       /varset mezTarg ${NearestSpawn[${i},playerstate 4 npc targetable radius ${AE_Radius}].ID}
-      /call TrueTarget ${mezTarg}
-      /delay 1s ${Target.BuffsPopulated}
-      /if (${Select[${AssistTarget},${mezTarg}]}==0 && (!${Bool[${Target.Mezzed}]} || ${Target.Mezzed.Duration.TotalSeconds} < 8)) {
-        /for s 1 to ${mezArray2D.Size[1]}
-          /call check_Ready "mezArray2D" ${s}
-          /if (${c_Ready}) {
-            /if (${check_Mana["mezArray2D",${s}]}) {
-              /if (${check_Distance[${mezTarg},${mezArray2D[${s},${iMyRange}]}]}) {
-                /docommand ${ChatToggle} << Mezzing ${mezTarg} with ${mezArray2D[${s},${iCastName}]} >>
-                /call e3_Cast ${mezTarg} "mezArray2D" "${s}"
+	  | Don't bother mezzing something that is almost dead
+	  /if (${Spawn[id ${mezTarg}].PctHPs} > 4) {
+		| Just in case we have CombatMode set to melee
+		/if (${Me.Combat}) /attack off
+        /call TrueTarget ${mezTarg}
+        /delay 1s ${Target.BuffsPopulated}
+	    | Check that it is not the AssistTarget, it's playerState indicates it's is aggroed, It's not already mezzed or it's mezz is about to expire
+        /if (${Select[${AssistTarget},${mezTarg}]}==0 && ${Target.PlayerState}!=0 && (!${Bool[${Target.Mezzed}]} || ${Target.Mezzed.Duration.TotalSeconds} < 8)) {
+          /for s 1 to ${mezArray2D.Size[1]}
+            /call check_Ready "mezArray2D" ${s}
+            /if (${c_Ready}) {
+              /if (${check_Mana["mezArray2D",${s}]}) {
+                /if (${check_Distance[${mezTarg},${mezArray2D[${s},${iMyRange}]}]}) {
+                  /docommand ${ChatToggle} << Mezzing ${Spawn[id ${mezTarg}].CleanName} (${mezTarg}) with ${mezArray2D[${s},${iCastName}]} >>
+                  /call e3_Cast ${mezTarg} "mezArray2D" "${s}"
+				  /if (${castReturn.Equal[CAST_SUCCESS]}) /docommand ${ChatToggle} !! ${Spawn[id ${mezTarg}].CleanName} (${mezTarg}) successfully mezzed with ${mezArray2D[${s},${iCastName}]} !!
+                }
               }
             }
-          }
-        /if (!${ActionTaken}) /next s
+          /if (!${ActionTaken}) /next s
+		}
       }
     /if (!${ActionTaken}) /next i
   }

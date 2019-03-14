@@ -50,5 +50,4 @@ Sub WIZ_Aliases
 /return
 |----------------------------------------------------------------------------|
 Sub WIZ_Background_Events
-	/if (${Me.Pet.ID} && ${Me.Pet.Race.Name.NotEqual[Gnomework]} && ${MacroQuest.Server.Equal[PEQTGC]}) /pet get lost
 /return

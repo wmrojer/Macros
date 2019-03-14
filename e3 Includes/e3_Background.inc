@@ -4,12 +4,11 @@
 |------------------------------------------------------------------------| 
 
 SUB check_Zone
-/if (${Debug} || ${Debug_Background}) /echo |- check_Zone ==>
-  /if (${Zone.ID}==190 || ${MacroQuest.GameState.Equal[CHARSELECT]}) /endmacro
+	/if (${Zone.ID}==190 || ${MacroQuest.GameState.Equal[CHARSELECT]}) /endmacro
 	/varset currentZone ${Zone.ID}
 	/varset idleTimer ${idleInterval}m
-  /if (${Assisting}) /call AssistOff
-  /if (${use_TargetAE} || ${use_PBAE}) /call Event_AEs "NULL" "${Me.CleanName}" "All" "Off"
+	/if (${Assisting}) /call AssistOff
+	/if (${use_TargetAE} || ${use_PBAE}) /call Event_AEs "NULL" "${Me.CleanName}" "All" "Off"
 	/if (${Me.Class.CanCast} && ${Defined[Default_SpellSet]}) /call check_Gems
 	/if (${Defined[failureList]}) /varset failureList
 
@@ -19,19 +18,17 @@ SUB check_Zone
 		/squelch /pet ghold on
 	}
 	/call check_tribZone
-  |reload cure arrays, supports only checking cures per zone
+	|reload cure arrays, supports only checking cures per zone
 	/if (${Macro.RunTime} > 15 && ${Select[${Me.Class.ShortName},DRU,SHM,CLR,PAL,BST,RNG]}) /call cure_spellArrays
-  /if (${Defined[autoMelody]}) {
-    /if (!${songSet.Length}) /call EVENT_startMelody "<${Me}> melody ${autoMelody}" "${Me}" "${autoMelody}"
-  }
-/if (${Debug} || ${Debug_Background}) /echo <== check_Zone -|
+	/if (${Defined[autoMelody]}) {
+		/if (!${songSet.Length}) /call EVENT_startMelody "<${Me}> melody ${autoMelody}" "${Me}" "${autoMelody}"
+	}
 /RETURN
 
 |--------------------------------------------------------------------------------------------------------------------|
 |- Attempts to load the spellset specified in your Macro_Ini, if you're missing more than 3 gems on your spellbar.  -|
 |--------------------------------------------------------------------------------------------------------------------|
 SUB check_Gems
-/if (${Debug} || ${Debug_Background}) /echo |- check_Gems ==>
 	| Count Empty Spell Gems
 	/declare i int local
 	/declare spellCount int local
@@ -44,36 +41,32 @@ SUB check_Gems
 		/docommand ${ChatToggle} Loading spells...
 		/memspellset ${Default_SpellSet}
 		:Memloop
-		/if (${Debug} || ${Debug_Background}) /echo |- check_Gems -| :Memloop
 		
 		/call Background_Events
-		/if (${Debug} || ${Debug_Background}) /echo spellsetMem_Timer = [${spellsetMem_Timer}]
 		/if (${Window[SpellBookWnd].Open} && ${spellsetMem_Timer}) /goto :Memloop
 		/if (${Me.Sitting}) /stand	
 	}
-/if (${Debug} || ${Debug_Background}) /echo <== check_Gems -|
 /RETURN
 
 |--------------------------------------------------------------------------------------------|
 |- Reports bots who have fallen behind, and attempts to re-aquire follow when it breaks.	-|
 |--------------------------------------------------------------------------------------------|
 SUB check_Follow
-/if (${Debug} || ${Debug_Background}) /echo |- check_Follow ==>
 	/if (${FollowTarget.NotEqual[${Me}]}) {
 	  /if (${SpawnCount[=${FollowTarget}]}) {
       /declare followTgtDistance float local ${Spawn[=${FollowTarget}].Distance}
       /declare followTgtLoS bool local ${Spawn[=${FollowTarget}].LineOfSight}
       /if (${followTgtDistance} <= ${LeashLength}) {
         /if (!${NetAdvPath.Status} && !${Stick.Active}) {
-          /if (${followTgtDistance}< 40 && ${medBreak}) {
-            /if (${Debug} || ${Debug_Background}) /echo not following during medbreak and < 40 dist
-          } else {
+		  | This was never used before since /netFollow and /stick was never turned off when meditating.
+		  | if less then 60 and on med break don't follow = more then 60 or not on med break ;P
+          /if (${followTgtDistance} > 60 || !${medBreak}) {
             /call AcquireFollow
           }
         }
         /if (${Me.FeetWet}) /squelch /face fast ${FollowTarget}
         |FollowCheckTimer
-      } else /if (${followTgtDistance} > ${LeashLength}) {
+      } else {
         /if (!${FollowCheckTimer}) {
           /if (!${NetAdvPath.Status} && !${Stick.Active}) {
             /bct ${FollowTarget} //popup ${Me} stopped moving! Dist:${followTgtDistance},LoS:${followTgtLoS}
@@ -85,7 +78,6 @@ SUB check_Follow
       }
 	  }
 	}
-/if (${Debug} || ${Debug_Background}) /echo <== check_Follow -|
 /RETURN
 
 |--------------------------------------------------------------------------------------------------------------------|
@@ -94,7 +86,6 @@ SUB check_Follow
 |- Updates idleTimer to the idleInterval set in your Macro_Ini, whenever you've recently been active, or in combat.	-|
 |--------------------------------------------------------------------------------------------------------------------|
 SUB check_Idle
-  /if (${Debug} || ${Debug_Background}) /echo |- check_Idle ==>
 | Check to see if I have been active recently.  If so, set Idle false, and update the idleTimer
   /if (${activeTimer} || ${Assisting}) {
     /varset idleTimer ${idleInterval}m
@@ -103,14 +94,12 @@ SUB check_Idle
     | If I haven't been active, and the idleTimer is spent, set idle TRUE.
     /if (!${idle} && !${idleTimer}) /varset idle TRUE
   }
-  /if (${Debug}) /echo <== check_Idle -| idleTimer = [${idleTimer}] || idle = [${idle}]
 /RETURN
 
 |--------------------------------------------------------------------------------------------|
 |- Checks to see if your character is active, if so pauses macro loop                       -|
 |--------------------------------------------------------------------------------------------|			
 SUB check_Active
-/if (${Debug} || ${Debug_Background}) /echo |- check_Active ==>
 	| Check Cursor
 	/if (${Cursor.ID}) {	
 		| Destroy badItems.
@@ -138,11 +127,11 @@ SUB check_Active
   |prevent guys from getting stuck trying to buff while moving
 	/if (${Me.Moving}) {
 	  /if (${Me.CombatState.Equal[COMBAT]}) {
-      /varset activeTimer 2
-      /varset rebuffTimer 10
+		  /varset activeTimer 2
+		  /varset rebuffTimer 10
 	  }  else {
-      /varset activeTimer 6
-      /varset rebuffTimer 25
+		  /varset activeTimer 6
+		  /varset rebuffTimer 25
 	  }
   }
 
@@ -152,7 +141,10 @@ SUB check_Active
   | If windows are open
 	/if (${Window[BigBankWnd].Open} || ${Window[MerchantWnd].Open} || ${Window[TradeWnd].Open} || ${Window[GuildBankWnd].Open}) {
 		/varset activeTimer 3s
-		/doevents flush
+		| We want events when trade window is open to be able to accept trade
+		/if (!${Window[TradeWnd].Open}) { 
+			/doevents flush
+		}
 	}
 
 	| Check spellbook
@@ -171,15 +163,17 @@ SUB check_Active
 	}
 | Check Zoning
   /if (!${SpawnCount[pc ${Me}]}) /varset activeTimer 5s
-/if (${Debug} || ${Debug_Background}) /echo <== check_Active -|
 /RETURN
 
 |------------------------------------------------------------|
 |- loot, check exp allocation, announce exp	-|
-#event YourKill "You gain experience!!"
-#event YourKill "You gain party experience!!"
-#event YourKill "You gained raid experience!"
-SUB Event_YourKill(line)
+#event GainExp "You have gain experience!!"
+#event GainExp "You have gain #*# experience!!"
+#event GainExp "You have gain party experience!!"
+#event GainExp "You have gained #*# party experience!!"
+#event GainExp "You have gained raid experience!"
+#event GainExp "You have gained #*# raid experience!"
+SUB Event_GainExp(line)
   /if (!${line.Find[raid]}) {
     /if (${Group}>1 && ${Me.Name.Equal[${Group.Leader}]}) {
       /bc [+g+] My group got Exp
@@ -196,16 +190,14 @@ SUB Event_YourKill(line)
       /bc [+y+] Auto setting AA Exp to 100%, at ${Me.PctExp}% of Level ${Me.Level}
     }
   }
-  /if (${Auto_Loot} && (${Me.CombatState.NotEqual[Combat]} || ${combatLooting})) /call loot_Area
 /RETURN
 
 |----------------------------------------------------------------------------------------------------|
 |- Completes item casting exchanges which were interrupted by macro end/crash/etc
 SUB completePendingExchange
-/if (${Debug} || ${Debug_Background}) /echo |- completePendingExchanges ==>
 	| Check for the item needing to be swapped back.
   |/echo ${itemToSwapBack} ${itemToSwapBack.Length}  ${swapItemSlot} ${swapItemSlot.Length}
-  |${${IniMode}[${MacroData_Ini},${Me.CleanName}-PEQTGC,Pending Exchange]}
+  |${${IniMode}[${MacroData_Ini},${Me.CleanName}-SEQEMU,Pending Exchange]}
   /declare itemToSwapBack string local ${Ini[${MacroData_Ini},${Me.CleanName}-${MacroQuest.Server},Pending Exchange].Arg[1,/]}
   /declare swapItemSlot string local ${Ini[${MacroData_Ini},${Me.CleanName}-${MacroQuest.Server},Pending Exchange].Arg[2,/]}
 
@@ -218,7 +210,6 @@ SUB completePendingExchange
       | Set a retry timer in case the first attempt fails
       /declare swapRetryTimer timer local 30
       :SwapBackLoop
-      /if (${Debug} || ${Debug_Background}) /echo :SwapBackLoop
       | Try to swap the item
       |/echo ${itemToSwapBack} ${swapItemSlot}
       /call SwapItem "${itemToSwapBack}" "${swapItemSlot}"
@@ -236,12 +227,10 @@ SUB completePendingExchange
       }
     }
 	}
-/if (${Debug} || ${Debug_Background}) /echo <== completePendingExchanges -|
 /RETURN
 
 |----------------------------------------------------------------------------------------------------|
 SUB check_autoTribute
-/if (${Debug}) 	/echo |- check_autoTribute -| Idle = ${idle}
 	| If idle is TRUE, and my remaining TributeTimer is < 10, turn off Tribute.
 	/if (!${tributeZone} && ${Me.TributeActive}) {
       /echo AutoTribute - Not a tribute zone.  Turning tribute off.
@@ -257,12 +246,10 @@ SUB check_autoTribute
       /call toggleTribute
     }
   }
-/if (${Debug}) /echo <== check_autoTribute -|
 /RETURN
 
 |----------------------------------------------------------------------------------------|
 SUB check_tribZone
-  /if (${Debug}) /echo |- check_tribZone ==>
 | If Tribute Settings.ini entry for this zone does not exist, create one, and default to 'off'.
   /if (!${Ini[${tributeZones_Ini},${Zone.ShortName.Left[1]},${Zone.ShortName}].Length}) {
     /call WriteToIni "${tributeZones_Ini},${Zone.ShortName.Left[1]},${Zone.ShortName}" "Off"
@@ -274,7 +261,6 @@ SUB check_tribZone
       /varset tributeZone FALSE
     }
   }
-  /if (${Debug}) /echo <== check_tribZone -|
 /RETURN
 
 |----------------------------------------------------------------------------------------------------|
@@ -297,11 +283,9 @@ SUB event_Set_tribZone(line, chatSender, zoneSetting)
 
 |----------------------------------------------------------------------------------------------------|
 SUB toggleTribute
-/if (${Debug}) /echo |- toggleTribute ==>
   /keypress TOGGLE_TRIBUTEBENEFITWIN
   /notify TBW_PersonalPage TBWP_ActivateButton leftmouseup
   /keypress TOGGLE_TRIBUTEBENEFITWIN
-/if (${Debug}) /echo <== toggleTribute -|
 /RETURN
 
 |----------------------------------------------------------------------------------------------------|
@@ -310,7 +294,6 @@ SUB toggleTribute
 #EVENT manualTributeSet "[#1#] Tribute #2#"
 #EVENT manualTributeSet "<#1#> Tribute #2#"
 SUB EVENT_manualTributeSet(line, ChatSender, eventParams)
-/if (${Debug}) /echo |- EVENT_manualTributeSet ==>
   /if (!${checkEventArgs[${ChatSender},${line},UZ,${eventParams}]}) /return
 
   /declare tributeToggle string local ${c_eventArgData.Arg[1,|]}
@@ -336,13 +319,11 @@ SUB EVENT_manualTributeSet(line, ChatSender, eventParams)
       /docommand /timed ${tributeTimerSetting} /echo Tribute Timer is up.  Activating tribute on the next upkeep.
     }
   }
-/if (${Debug}) /echo <== EVENT_manualTributeSet -|
 /RETURN
 
 |----------------------------------------------------------------------------------------------------|
 Sub background_Setup
-/call iniToVarV "${advSettings_Ini},Debug,Debug Background (On/Off)" Debug_Background bool outer
-/if (${Debug} || ${Debug_Background}) /echo |- background_Setup ==>
+	/call iniToVarV "${advSettings_Ini},Debug,Debug Background (On/Off)" Debug_Background bool outer
 	/declare idle bool outer false
 	/declare idleTimer timer outer
 	/declare ActionTaken bool outer FALSE
@@ -411,7 +392,6 @@ Sub background_Setup
 
   /call iniToVarV "${genSettings_Ini},Background,AutoSetPctAAExp (On/Off)" autoSetPctAAExp bool outer
 
-/if (${Debug} || ${Debug_Background}) /echo <== background_Setup -|
 /return
 
 |----------------------------------------------------------------------------------------------------|
@@ -421,8 +401,8 @@ SUB background_MacroSettings
 	/call WriteToIni "${genSettings_Ini},Background,Idle Time Out (Min)" 10
 	/call WriteToIni "${genSettings_Ini},Background,Auto-Inventory Timer (Sec)" 30
 	/call WriteToIni "${genSettings_Ini},Background,Close Spellbook Timer (Sec)" 30
-  /call WriteToIni "${genSettings_Ini},Background,AutoSetPctAAExp (On/Off)" On
-  /call WriteToIni "${genSettings_Ini},Auto-Tribute,Auto-Tribute (On/Off)" Off
+	/call WriteToIni "${genSettings_Ini},Background,AutoSetPctAAExp (On/Off)" On
+	/call WriteToIni "${genSettings_Ini},Auto-Tribute,Auto-Tribute (On/Off)" Off
 /RETURN
 
 |----------------------------------------------------------------------------------------------------|
@@ -441,7 +421,7 @@ Sub background_Aliases
 
 |----------------------------------------------------------------------------------------------------|
 Sub background_Background_Events
-  /doevents manualTributeSet
+	/doevents manualTributeSet
 	/doevents updateAliases
-  /doevents YourKill
+	/doevents GainExp
 /return

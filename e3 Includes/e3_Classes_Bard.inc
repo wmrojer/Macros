@@ -14,7 +14,7 @@ SUB EVENT_saveMelody(line, ChatSender, melodyName, songsToSave)
 		/if (${Ini[${Character_Ini},${melodyName} Melody].Length}) {	
 			/if (${Debug}) /echo |- EVENT_saveMelody -| Overwriting [${melodyName}] melody...
 			/for i 1 to 8 + ${Me.SPA[326]}
-				/if (${Ini[${Character_Ini},${melodyName} Melody,Song].Length}) /call WriteToIni "${Character_Ini},${melodyName} Melody,Song#${i}" *PLACEHOLDER 1
+				/if (${Ini[${Character_Ini},${melodyName} Melody,Song#${i}].Length}) /call WriteToIni "${Character_Ini},${melodyName} Melody,Song#${i}" PLACEHOLDER 1
 			/next i
 		}
 		/echo Saving [${melodyName}] melody...
@@ -28,7 +28,7 @@ SUB EVENT_saveMelody(line, ChatSender, melodyName, songsToSave)
 			}
 		} else {
 			/echo Song#${i}=${Me.Gem[${songsToSave.Arg[${i}, ]}]}/gem|${songsToSave.Arg[${i}, ]}
-			/call WriteToIni "${Character_Ini},${melodyName} Melody,Song" "${Me.Gem[${songsToSave.Arg[${i}, ]}]}/gem|${songsToSave.Arg[${i}, ]}" ${If[${Ini[${Character_Ini},${melodyName} Melody,Song].Length},1,0]}
+			/call WriteToIni "${Character_Ini},${melodyName} Melody,Song#${i}" "${Me.Gem[${songsToSave.Arg[${i}, ]}]}/gem|${songsToSave.Arg[${i}, ]}" ${If[${Ini[${Character_Ini},${melodyName} Melody,Song#${i}].Length},1,0]}
 		}
 		/varcalc i ${i} + 1
 		/if (${songsToSave.Arg[${i}, ].Length}) /goto :check_nextSong
@@ -46,7 +46,7 @@ SUB EVENT_startMelody(line, ChatSender, melodyName)
     /declare memGem int local
     /varset melodyName ${c_eventArgData}
     | If I don't have the melodyName listed in my ini.
-    /call IniToArrayV "${Character_Ini},${melodyName} Melody,Song#" melodyArray
+    /call IniToArray_Deprecated "${Character_Ini},${melodyName} Melody,Song#" melodyArray
     /if (!${Defined[melodyArray]}) {
       | If Stop, end, or pause were used, stop the melody.
       /if (${Select[${melodyName},Stop,End,Pause]}) {
@@ -101,11 +101,9 @@ SUB EVENT_startMelody(line, ChatSender, melodyName)
 /return
 |--------------------------------------------------------------|
 SUB pauseTwist
-/if (${Debug} || ${Debug_Casting}) /echo |- pauseTwist ==>
 	/varset	returnTwist TRUE
 	/squelch /twist stop
 	/delay 20 !${Me.Casting.ID}
-/if (${Debug} || ${Debug_Casting}) /echo <== pauseTwist -|
 /return
 |--------------------------------------------------------------|
 SUB unpauseTwist

@@ -41,32 +41,32 @@
 
 SUB e3_Setup(modeSelect)
 /if (${Debug}) /echo |- e3_Setup ==>
-  /declare reloadOnLoot bool outer FALSE
-  /declare missingSpellItem string outer
-  /declare numInventorySlots int outer 10
+	/declare reloadOnLoot bool outer FALSE
+	/declare missingSpellItem string outer
+	/declare numInventorySlots int outer 10
 	/if (${modeSelect.Equal[Debug]}) /varset Debug TRUE
 	| The file path for e3 Data.ini will still need to be updated in corresponding includes because you must use /noparse to write variables to inis.
 	/declare MacroData_Ini string outer e3 Macro Inis\e3 Data.ini
 	/call check_Plugins
 	/echo Loading e3 v${macroVersion}...
 	| create a macro data
-   /if (!${${IniMode}[${MacroData_Ini}].Length}) {
+	/if (!${${IniMode}[${MacroData_Ini}].Length}) {
 		/echo Welcome to e3! preforming first time setup...
 		/call make_macroDataIni
 	}
-  | Import file paths =======================================================================================================
+	| Import file paths =======================================================================================================
 	| General Settings
-  /if (!${${IniMode}[${MacroData_Ini},File Paths,General Settings].Length}) {
+	/if (!${${IniMode}[${MacroData_Ini},File Paths,General Settings].Length}) {
 		/echo ERROR: Could not find designated file path for [General Settings].  Please review review settings in [${MacroData_Ini} > File Paths].
-    /beep
+		/beep
 		/endmacro
 	} else {
-      /declare genSettings_Ini string outer ${${IniMode}[${MacroData_Ini},File Paths,General Settings]}
+		/declare genSettings_Ini string outer ${${IniMode}[${MacroData_Ini},File Paths,General Settings]}
 	}
 	| Advanced Settings
-   /if (!${${IniMode}[${MacroData_Ini},File Paths,Advanced Settings].Length}) {
+	/if (!${${IniMode}[${MacroData_Ini},File Paths,Advanced Settings].Length}) {
 		/echo ERROR: Could not find designated file path for [Advanced Settings].  Please review review settings in [${MacroData_Ini} > File Paths].
-     /beep
+		/beep
 		/endmacro
 	} else {
 		/declare advSettings_Ini string outer ${${IniMode}[${MacroData_Ini},File Paths,Advanced Settings]}
@@ -74,7 +74,7 @@ SUB e3_Setup(modeSelect)
 	| Bot Settings
 	/if (!${${IniMode}[${MacroData_Ini},File Paths,Bot Settings].Length}) {
 		/echo ERROR: Could not find designated file path for [Bot Settings].  Please review review settings in [${MacroData_Ini} > File Paths].
-    /beep
+		/beep
 		/endmacro
 	} else {
 		/declare Character_Ini string outer ${${IniMode}[${MacroData_Ini},File Paths,Bot Settings]}
@@ -84,21 +84,21 @@ SUB e3_Setup(modeSelect)
 	  /echo New version of e3 detected. Hold on to your nuggets!
 	  | Macro Setting Inis
 	  /if (!${${IniMode}[${MacroData_Ini},e3 Build,Version].Equal[${macroVersion}]} || !${Bool[${${IniMode}[${genSettings_Ini}]}]}) /call EVENT_make_MacroSettingsIni
-    /delay 1s
+	  /delay 1s
 	  | Macro Aliases
 	  /if (!${${IniMode}[${MacroData_Ini},e3 Build,Version].Equal[${macroVersion}]}) /call EVENT_updateAliases
-    /delay 1s
+	  /delay 1s
 	  | Update macro version in e3 Data.ini
 	  /if (!${${IniMode}[${MacroData_Ini},e3 Build,Version].Equal[${macroVersion}]}) /call WriteToIni "${MacroData_Ini},e3 Build,Version" "${macroVersion}" 1
-    /delay 1s
-  }
-  | Generate Character_Ini.
-  /if (!${${IniMode}[${MacroData_Ini},${Me.CleanName}-PEQTGC,Bot_Ini version].Equal[${macroVersion}]} || !${Bool[${${IniMode}[${Character_Ini}]}]}) {
-    /delay 1s
-    /call EVENT_make_CharacterSettingsIni
-  }
+	  /delay 1s
+	}
+	| Generate Character_Ini.
+	/if (!${${IniMode}[${MacroData_Ini},${Me.CleanName}-SEQEMU,Bot_Ini version].Equal[${macroVersion}]} || !${Bool[${${IniMode}[${Character_Ini}]}]}) {
+		/delay 1s
+		/call EVENT_make_CharacterSettingsIni
+	}
 
-  | Import ini settings =====================================================================================================
+	| Import ini settings =====================================================================================================
 	/if (${Debug}) /echo Importing user settings...
 	| Debug
 	/if (!${modeSelect.Equal[Debug]}) /call iniToVarV "${advSettings_Ini},Debug,Debug Mode (On/Off)" Debug bool outer
@@ -139,7 +139,7 @@ SUB e3_Setup(modeSelect)
 SUB make_macroDataIni
 /if (${Debug}) /echo |- make_macroDataIni ==>
 	/noparse /ini "e3 Macro Inis\e3 Data.ini" "e3 Build" "Version"
-	/noparse /ini "e3 Macro Inis\e3 Data.ini" "File Paths" "Bot Settings" "e3 Bot Inis\${Me.CleanName}_PEQTGC.ini"
+	/noparse /ini "e3 Macro Inis\e3 Data.ini" "File Paths" "Bot Settings" "e3 Bot Inis\${Me.CleanName}_SEQEMU.ini"
 	/noparse /ini "e3 Macro Inis\e3 Data.ini" "File Paths" "General Settings" "e3 Macro Inis\General Settings.ini"
 	/noparse /ini "e3 Macro Inis\e3 Data.ini" "File Paths" "Advanced Settings" "e3 Macro Inis\Advanced Settings.ini"
 /if (${Debug}) /echo <== make_macroDataIni -|
@@ -236,7 +236,7 @@ SUB EVENT_make_CharacterSettingsIni
 		/if (${Bool[${macroSetups[${i}]}]}) /call ${macroSetups[${i}]}_CharacterSettings
 		/delay 2
 	/next i
-	/call WriteToIni "${MacroData_Ini},${Me.CleanName}-PEQTGC,Bot_Ini version" "${macroVersion}" 1
+	/call WriteToIni "${MacroData_Ini},${Me.CleanName}-SEQEMU,Bot_Ini version" "${macroVersion}" 1
 /if (${Debug}) /echo <== make_CharacterSettingsIni -|
 /RETURN	
 

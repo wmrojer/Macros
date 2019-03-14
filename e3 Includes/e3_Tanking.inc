@@ -4,11 +4,15 @@ Sub check_Tanking
 /return
 
 
+| !!!Changed!!! Added timer to prevent rapid target switching when more then one mob is below switch %
+| !!!Changed!!! Added check that killTarget is still a valid target
+| !!!Changed!!! Removed unfunctional check for PC pet.
 SUB tankKill
-  |/echo inTankKill ${Time}
+  |/echo |- TankKill ${Time} ==>
   /declare i int local 0
   /declare tilde_loc int local 0
   /declare npc int local 0
+  /declare switchTimer timer local 0
   |if i have an assisttarget then attack has been manually issued
   /if (${Bool[${AssistTarget}]}) {
     /varset tankKillEngaged TRUE
@@ -19,36 +23,53 @@ SUB tankKill
   /if (${tankKillEngaged}) {
     :mainKillLoop
     /varset i 0
-    |/echo Close NPC ${SpawnCount[npc playerstate 4 targetable radius 75 zradius 25 los]}
+    |/echo |- tankKill Close NPC ${SpawnCount[npc playerstate 4 targetable radius 75 zradius 25 los]}
     /if (${SpawnCount[npc playerstate 4 targetable radius 75 zradius 25 los]}==0 && ${Me.CombatState.NotEqual[COMBAT]}) {
       /echo No Npc in Range, exiting tankKill
       /varset tankKillEngaged FALSE
-      /varset doTaunt FALSE
+	  /varset killTarget 0
+      |/varset doTaunt FALSE
       /squelch /turbo ${classTurbo}
       /return
     } else {
-      /if (!${Bool[${killTarget}]} || (${Bool[${killTarget}]} && ${Spawn[id ${killTarget}].PctHPs} < 15)) {
+	  | Is killTarget still a vaild target?
+	  /if (!${Spawn[id ${killTarget}].Type.Equal[NPC]}) {
+		/echo |- tankKill killTarget not a valid target anymore
+		/varset killTarget 0
+	  }
+	  | !!!TODO!!! Add PCtHPs to switch target at to general.ini  !!!TODO!!!
+      /if (!${Bool[${killTarget}]} || (${Spawn[id ${killTarget}].PctHPs} < 4 && !${switchTimer})) {
+	    /echo |- tankKill looking for new target since ${Spawn[id ${killTarget}].CleanName} (${killTarget}) is almost dead. >>
         :getTargetLoop
         /varcalc i ${i}+1
         /varset npc ${NearestSpawn[${i},npc playerstate 4 targetable radius 75 zradius 25 los].ID}
 
         /if (${Bool[${npc}]}) {
-          /varset tilde_loc ${Spawn[id ${npc}].CleanName.Find[`s pet]}
-          /if (${tilde_loc} > 0) {
-            /if (${Spawn[pc ${Spawn[id ${npc}].CleanName.Left[${Math.Calc[${tilde_loc}-1].Int}]}].ID}) /goto :getTargetLoop
-          }
-          |/echo ${i} knpc ${killTarget} npc ${npc} ${Spawn[id ${npc}].CleanName} ${Spawn[id ${npc}].Type}
-          /if (${killTarget}==${npc} || ${Bool[${Spawn[id ${npc}].Master}]}) {
+		  | What's the point with this code to check for a player pet? It doesn't work!!!
+          |/varset tilde_loc ${Spawn[id ${npc}].CleanName.Find[`s pet]}
+          |/if (${tilde_loc} > 0) {
+          |  /if (${Spawn[pc ${Spawn[id ${npc}].CleanName.Left[${Math.Calc[${tilde_loc}-1].Int}]}].ID}) /goto :getTargetLoop
+          |}
+          /echo |- tankKill ${i} killTarget = ${killTarget} npc = ${npc} ${Spawn[id ${npc}].CleanName} ${Spawn[id ${npc}].Type}
+          /if (${killTarget}==${npc}) {
+			| same target as before
+            /goto :getTargetLoop
+          } else /if (${Bool[${Spawn[id ${npc}].Master}]}) {
+			/chat |- TankKill found unsuitable target (Master?) ${Spawn[id ${npc}].CleanName} (${npc})
             /goto :getTargetLoop
           } else /if (${Spawn[id ${npc}].Type.Equal[NPC]}) {
+			/bc << Switching killTarget to ${Spawn[id ${npc}].CleanName} (${npc}) since ${Spawn[id ${killTarget}].CleanName} (${killTarget}) is almost dead. >>
             /varset killTarget ${npc}
             /call TrueTarget ${killTarget}
             /attack on
             /stick 12 front moveback uw
             /assistme /not|${currentPuller}
+			/varset switchTimer 3s
             /doevents flush Assist
           }
-        }
+        } else {
+		  /echo |- tankKill no new target found
+		}
       }
     }
     /if (${lifeSupport2D.Size[1]} && ${Me.PctHPs} <=80) /call check_lifeSupport

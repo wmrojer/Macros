@@ -1,9 +1,10 @@
 #turbo
-Sub Main
+Sub Main(langnr)
 
+	/if (${Int[${langnr}]})	/lang ${langnr}
 	
 	:Loop
-	/g bla
+	/g Vini Vidi Vici
 	/delay 5
 	/goto :Loop
 

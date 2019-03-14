@@ -190,7 +190,7 @@ SUB ListToArray(ArrayName, Data, delimiter)
 SUB BuildSpellArray(ArrayName, NewArrayName)
   |/echo Array ${ArrayName} ${NewArrayName}
 	/if (!${Defined[SpellProp]}) {
-		/declare SpellProp[38] string outer 0
+		/declare SpellProp[40] string outer 0
 		/varset SpellProp[1] CastName
 		/varset SpellProp[2] CastType
 		/varset SpellProp[3] TargetType
@@ -222,13 +222,15 @@ SUB BuildSpellArray(ArrayName, NewArrayName)
 		/varset SpellProp[29] CastInvis
 		/varset SpellProp[30] SpellType
 		/varset SpellProp[31] CastTarget
-    /varset SpellProp[32] GiftOfMana
-    /varset SpellProp[33] CheckForID
-    /varset SpellProp[34] SpellID
+		/varset SpellProp[32] GiftOfMana
+		/varset SpellProp[33] CheckForID
+		/varset SpellProp[34] SpellID
 		/varset SpellProp[35] PctAggro
 		/varset SpellProp[36] Zone
-    /varset SpellProp[37] MinSick
-    /varset SpellProp[38] Ifs
+		/varset SpellProp[37] MinSick
+		/varset SpellProp[38] Ifs
+		/varset SpellProp[39] PctHP
+		/varset SpellProp[40] PctMaxAggro
 	}
 
   /if (${Defined[${NewArrayName}]}) /deletevar ${NewArrayName}
@@ -260,20 +262,22 @@ SUB BuildSpellArray(ArrayName, NewArrayName)
 	/if (!${Defined[iNoBurn]})			/declare iNoBurn int outer 22
 	/if (!${Defined[iNoAggro]})			/declare iNoAggro int outer 23
 	/if (!${Defined[iMode]})			/declare iMode int outer 24
-	/if (!${Defined[iRotate]})		/declare iRotate int outer 25
+	/if (!${Defined[iRotate]})			/declare iRotate int outer 25
 	/if (!${Defined[iDelay]})			/declare iDelay int outer 26	
 	/if (!${Defined[iCastID]})			/declare iCastID int outer 27
 	/if (!${Defined[iMinEnd]})			/declare iMinEnd int outer 28
 	/if (!${Defined[iCastInvis]})		/declare iCastInvis int outer 29
 	/if (!${Defined[iSpellType]})		/declare iSpellType int outer 30
 	/if (!${Defined[iCastTarget]})		/declare iCastTarget int outer 31
-  /if (!${Defined[iGiftOfMana]})		/declare iGiftOfMana int outer 32
-  /if (!${Defined[iCheckForID]})		/declare iCheckForID int outer 33
-  /if (!${Defined[iSpellID]})		/declare iSpellID int outer 34
-  /if (!${Defined[iPctAggro]})		/declare iPctAggro int outer 35
-	/if (!${Defined[iZone]})		/declare iZone int outer 36
-  /if (!${Defined[iMinSick]})		/declare iMinSick int outer 37
-  /if (!${Defined[iIfs]})		/declare iIfs int outer 38
+	/if (!${Defined[iGiftOfMana]})		/declare iGiftOfMana int outer 32
+	/if (!${Defined[iCheckForID]})		/declare iCheckForID int outer 33
+	/if (!${Defined[iSpellID]})			/declare iSpellID int outer 34
+	/if (!${Defined[iPctAggro]})		/declare iPctAggro int outer 35
+	/if (!${Defined[iZone]})			/declare iZone int outer 36
+	/if (!${Defined[iMinSick]})			/declare iMinSick int outer 37
+	/if (!${Defined[iIfs]})				/declare iIfs int outer 38
+	/if (!${Defined[iPctHP]})			/declare iPctHP int outer 39
+	/if (!${Defined[iPctMaxAggro]})		/declare iPctMaxAggro int outer 40
 
 	/declare i int local
 	/declare printAll bool local FALSE
@@ -328,9 +332,9 @@ SUB BuildSpellArray(ArrayName, NewArrayName)
 		} else /if (${Me.Ability[${${NewArrayName}[${i},${iCastName}]}]}) {
 			/varset ${NewArrayName}[${i},${iCastType}] Ability			
 		} else {
-      /varset ${NewArrayName}[${i},${iCastType}] Item
+			/varset ${NewArrayName}[${i},${iCastType}] Item
 		}
-    /if (${printAll}) /echo CastType ${${NewArrayName}[${i},${iCastType}]}
+		/if (${printAll}) /echo CastType ${${NewArrayName}[${i},${iCastType}]}
 		
 		| get TargetType
 		/if (${${NewArrayName}[${i},${iCastType}].Equal[Item]}) {
@@ -347,7 +351,7 @@ SUB BuildSpellArray(ArrayName, NewArrayName)
 			/call argueString Gem| "${${ArrayName}[${i}]}"
 			/varset ${NewArrayName}[${i},${iSpellGem}] ${c_argueString}
 		} else {
-		  /varset ${NewArrayName}[${i},${iSpellGem}] ${DefaultGem}
+			/varset ${NewArrayName}[${i},${iSpellGem}] ${DefaultGem}
 		}
 		/if (${printAll}) /echo SpellGem ${${NewArrayName}[${i},${iSpellGem}]}
 		
@@ -370,7 +374,7 @@ SUB BuildSpellArray(ArrayName, NewArrayName)
 			/call argueString MaxTries| "${${ArrayName}[${i}]}"
 			/varset ${NewArrayName}[${i},${iMaxTries}] ${c_argueString}
 		} else {
-      /varset ${NewArrayName}[${i},${iMaxTries}] 5
+			/varset ${NewArrayName}[${i},${iMaxTries}] 5
 		}
 		/if (${printAll}) /echo MaxTries ${${NewArrayName}[${i},${iMaxTries}]}		
 		
@@ -379,7 +383,7 @@ SUB BuildSpellArray(ArrayName, NewArrayName)
 			/call argueString CheckFor| "${${ArrayName}[${i}]}"
 			/varset ${NewArrayName}[${i},${iCheckFor}] ${c_argueString}
 		} else {
-      /varset ${NewArrayName}[${i},${iCheckFor}] -1
+			/varset ${NewArrayName}[${i},${iCheckFor}] -1
 		}
 		/if (${printAll}) /echo CheckFor ${${NewArrayName}[${i},${iCheckFor}]}		
 		
@@ -391,9 +395,8 @@ SUB BuildSpellArray(ArrayName, NewArrayName)
 		} else /if (${${NewArrayName}[${i},${iCastType}].Equal[Spell]}) {
 			/varset	${NewArrayName}[${i},${iDuration}] ${Spell[${${NewArrayName}[${i},${iCastName}]}].Duration}			
 		} else /if (${${NewArrayName}[${i},${iCastType}].Equal[Disc]}) {
-      /varset	${NewArrayName}[${i},${iDuration}] ${Spell[${${NewArrayName}[${i},${iCastName}]}].Duration}
-    }
-
+			/varset	${NewArrayName}[${i},${iDuration}] ${Spell[${${NewArrayName}[${i},${iCastName}]}].Duration}
+		}
 		/if (${printAll}) /echo SpellDuration ${${NewArrayName}[${i},${iDuration}]}
 		
 		| get RecastTime
@@ -445,20 +448,20 @@ SUB BuildSpellArray(ArrayName, NewArrayName)
 			} else {
 				/varset	${NewArrayName}[${i},${iMyRange}] ${Spell[${${NewArrayName}[${i},${iCastName}]}].MyRange}
 			}
-    } else /if (${${NewArrayName}[${i},${iCastType}].Equal[Spell]}) {
-      /if (${Spell[${${NewArrayName}[${i},${iCastName}]}].AERange} > 0) {
-        /varset	${NewArrayName}[${i},${iMyRange}] ${Spell[${${NewArrayName}[${i},${iCastName}]}].AERange}
-      } else {
-        /varset	${NewArrayName}[${i},${iMyRange}] ${Spell[${${NewArrayName}[${i},${iCastName}]}].MyRange}
-      }
-    } else /if (${${NewArrayName}[${i},${iCastType}].Equal[Disc]}) {
-      /if (${Spell[${${NewArrayName}[${i},${iCastName}]}].AERange} > 0) {
-        /varset	${NewArrayName}[${i},${iMyRange}] ${Spell[${${NewArrayName}[${i},${iCastName}]}].AERange}
-      } else {
-        /varset	${NewArrayName}[${i},${iMyRange}] ${Spell[${${NewArrayName}[${i},${iCastName}]}].MyRange}
-      }
-    }
-  /if (${printAll}) /echo MyRange ${${NewArrayName}[${i},${iMyRange}]}
+		} else /if (${${NewArrayName}[${i},${iCastType}].Equal[Spell]}) {
+			/if (${Spell[${${NewArrayName}[${i},${iCastName}]}].AERange} > 0) {
+				/varset	${NewArrayName}[${i},${iMyRange}] ${Spell[${${NewArrayName}[${i},${iCastName}]}].AERange}
+			} else {
+				/varset	${NewArrayName}[${i},${iMyRange}] ${Spell[${${NewArrayName}[${i},${iCastName}]}].MyRange}
+			}
+		} else /if (${${NewArrayName}[${i},${iCastType}].Equal[Disc]}) {
+			/if (${Spell[${${NewArrayName}[${i},${iCastName}]}].AERange} > 0) {
+				/varset	${NewArrayName}[${i},${iMyRange}] ${Spell[${${NewArrayName}[${i},${iCastName}]}].AERange}
+			} else {
+				/varset	${NewArrayName}[${i},${iMyRange}] ${Spell[${${NewArrayName}[${i},${iCastName}]}].MyRange}
+			}
+		}
+		/if (${printAll}) /echo MyRange ${${NewArrayName}[${i},${iMyRange}]}
 		
 		| get Mana
 		/if (${${NewArrayName}[${i},${iCastType}].Equal[Spell]}) /varset ${NewArrayName}[${i},${iMana}] ${Spell[${${NewArrayName}[${i},${iCastName}]}].Mana}
@@ -490,7 +493,7 @@ SUB BuildSpellArray(ArrayName, NewArrayName)
 		/if (${printAll}) /echo MinHP ${${NewArrayName}[${i},${iMinHP}]}	
 
 		| get HealPct
-		/if (${Select[${ArrayName},tankHeals,importantHeals,allHeals,hotSpells,groupHeals,lifeSupport,petHeal,petHeals,lifeTaps]}) {
+		/if (${Select[${ArrayName},tankHeals,importantHeals,allHeals,oocHeals,hotSpells,groupHeals,lifeSupport,petHeal,petHeals,lifeTaps]}) {
 			/if (${${ArrayName}[${i}].Find[/HealPct|]}) {
 				/call argueString HealPct| "${${ArrayName}[${i}]}"
 				/varset ${NewArrayName}[${i},${iHealPct}] ${c_argueString}
@@ -501,7 +504,7 @@ SUB BuildSpellArray(ArrayName, NewArrayName)
 				/endmacro
 			}
 		}		
-		|/if (${printAll}) /echo HealPct ${${NewArrayName}[${i},${iHealPct}]}
+		/if (${printAll}) /echo HealPct ${${NewArrayName}[${i},${iHealPct}]}
 		
 		| get Reagent
 		/if (${${ArrayName}[${i}].Find[/Reagent|]}) {
@@ -523,21 +526,22 @@ SUB BuildSpellArray(ArrayName, NewArrayName)
 			/varset	${NewArrayName}[${i},${iSpellName}] ${Me.AltAbility[${${NewArrayName}[${i},${iCastName}]}].Spell}
 		} else /if (${${NewArrayName}[${i},${iCastType}].Equal[Spell]}) {
 			/varset	${NewArrayName}[${i},${iSpellName}] ${Spell[${${NewArrayName}[${i},${iCastName}]}]}
-    } else /if (${${NewArrayName}[${i},${iCastType}].Equal[Disc]}) {
-      /varset	${NewArrayName}[${i},${iSpellName}] ${Spell[${${NewArrayName}[${i},${iCastName}]}]}
-    }
+		} else /if (${${NewArrayName}[${i},${iCastType}].Equal[Disc]}) {
+			/varset	${NewArrayName}[${i},${iSpellName}] ${Spell[${${NewArrayName}[${i},${iCastName}]}]}
+		}
 		/if (${printAll}) /echo SpellName ${${NewArrayName}[${i},${iSpellName}]}
-    | get SpellID
-      /if (${${NewArrayName}[${i},${iCastType}].Equal[Item]}) {
-        /varset	${NewArrayName}[${i},${iSpellID}] ${FindItem[=${${NewArrayName}[${i},${iCastName}]}].Spell.ID}
-      } else /if (${${NewArrayName}[${i},${iCastType}].Equal[AA]}) {
-        /varset	${NewArrayName}[${i},${iSpellID}] ${Me.AltAbility[${${NewArrayName}[${i},${iCastName}]}].Spell.ID}
-      } else /if (${${NewArrayName}[${i},${iCastType}].Equal[Spell]}) {
-        /varset	${NewArrayName}[${i},${iSpellID}] ${Spell[${${NewArrayName}[${i},${iCastName}]}].ID}
-      } else /if (${${NewArrayName}[${i},${iCastType}].Equal[Disc]}) {
-        /varset	${NewArrayName}[${i},${iSpellID}] ${Spell[${${NewArrayName}[${i},${iCastName}]}].ID}
-      }
-      /if (${printAll}) /echo SpellID ${${NewArrayName}[${i},${iSpellID}]}
+		
+		| get SpellID
+		/if (${${NewArrayName}[${i},${iCastType}].Equal[Item]}) {
+			/varset	${NewArrayName}[${i},${iSpellID}] ${FindItem[=${${NewArrayName}[${i},${iCastName}]}].Spell.ID}
+		} else /if (${${NewArrayName}[${i},${iCastType}].Equal[AA]}) {
+			/varset	${NewArrayName}[${i},${iSpellID}] ${Me.AltAbility[${${NewArrayName}[${i},${iCastName}]}].Spell.ID}
+		} else /if (${${NewArrayName}[${i},${iCastType}].Equal[Spell]}) {
+			/varset	${NewArrayName}[${i},${iSpellID}] ${Spell[${${NewArrayName}[${i},${iCastName}]}].ID}
+		} else /if (${${NewArrayName}[${i},${iCastType}].Equal[Disc]}) {
+			/varset	${NewArrayName}[${i},${iSpellID}] ${Spell[${${NewArrayName}[${i},${iCastName}]}].ID}
+		}
+		/if (${printAll}) /echo SpellID ${${NewArrayName}[${i},${iSpellID}]}
 		
 		| get NoBurn
 		/if (${${ArrayName}[${i}].Find[/NoBurn]}) {
@@ -576,20 +580,20 @@ SUB BuildSpellArray(ArrayName, NewArrayName)
 			/varset	${NewArrayName}[${i},${iCastID}] ${Me.AltAbility[${${NewArrayName}[${i},${iCastName}]}].ID}
 		} else /if (${${NewArrayName}[${i},${iCastType}].Equal[Spell]}) {
 			/varset	${NewArrayName}[${i},${iCastID}] ${Spell[${${NewArrayName}[${i},${iCastName}]}].ID}
-    } else /if (${${NewArrayName}[${i},${iCastType}].Equal[Disc]}) {
-      /varset	${NewArrayName}[${i},${iCastID}] ${Spell[${${NewArrayName}[${i},${iCastName}]}].ID}
-    }
+		} else /if (${${NewArrayName}[${i},${iCastType}].Equal[Disc]}) {
+			/varset	${NewArrayName}[${i},${iCastID}] ${Spell[${${NewArrayName}[${i},${iCastName}]}].ID}
+		}
 		/if (${printAll}) /echo iCastID ${${NewArrayName}[${i},${iCastID}]}
 
-    | get CheckForID
-    /if (${Bool[${AltAbility[${${NewArrayName}[${i},${iCheckFor}]}].Spell}]}) {
-      /varset ${NewArrayName}[${i},${iCheckForID}] ${AltAbility[${${NewArrayName}[${i},${iCheckFor}]}].Spell.ID}
-    } else /if (${Bool[${Spell[${${NewArrayName}[${i},${iCheckFor}]}].ID}]}) {
-      /varset ${NewArrayName}[${i},${iCheckForID}] ${Spell[${${NewArrayName}[${i},${iCheckFor}]}].ID}
-    } else {
-      /varset ${NewArrayName}[${i},${iCheckForID}] -1
-    }
-    /if (${printAll}) /echo ${${NewArrayName}[${i},${iCastName}]} ${${NewArrayName}[${i},${iCheckFor}]} iCheckForID ${${NewArrayName}[${i},${iCheckForID}]}
+		| get CheckForID
+		/if (${Bool[${AltAbility[${${NewArrayName}[${i},${iCheckFor}]}].Spell}]}) {
+			/varset ${NewArrayName}[${i},${iCheckForID}] ${AltAbility[${${NewArrayName}[${i},${iCheckFor}]}].Spell.ID}
+		} else /if (${Bool[${Spell[${${NewArrayName}[${i},${iCheckFor}]}].ID}]}) {
+			/varset ${NewArrayName}[${i},${iCheckForID}] ${Spell[${${NewArrayName}[${i},${iCheckFor}]}].ID}
+		} else {
+			/varset ${NewArrayName}[${i},${iCheckForID}] -1
+		}
+		/if (${printAll}) /echo ${${NewArrayName}[${i},${iCastName}]} ${${NewArrayName}[${i},${iCheckFor}]} iCheckForID ${${NewArrayName}[${i},${iCheckForID}]}
 
 
 		| get MinEnd
@@ -597,8 +601,8 @@ SUB BuildSpellArray(ArrayName, NewArrayName)
 			/call argueString MinEnd| "${${ArrayName}[${i}]}"
 			/varset ${NewArrayName}[${i},${iMinEnd}] ${c_argueString}
 		} else {
-		  |default to casting until out of endurance
-      /varset ${NewArrayName}[${i},${iMinEnd}] 0
+			|default to casting until out of endurance
+			/varset ${NewArrayName}[${i},${iMinEnd}] 0
 		}
 		/if (${printAll}) /echo MinEnd ${${NewArrayName}[${i},${iMinEnd}]}
 
@@ -616,52 +620,74 @@ SUB BuildSpellArray(ArrayName, NewArrayName)
 		/if (${Select[${ArrayName},BotBuffs,CombatBuffs,cureTargets]}) /varset ${NewArrayName}[${i},${iCastTarget}] ${${ArrayName}[${i}].Arg[2,/]}
 		/if (${printAll}) /echo CastTarget ${${NewArrayName}[${i},${iCastTarget}]}
 
-    | get GiftOfMana
-    /if (${${ArrayName}[${i}].Find[/GoM]}) /varset ${NewArrayName}[${i},${iGiftOfMana}] 1
-    /if (${printAll}) /echo GiftOfMana ${${NewArrayName}[${i},${iGiftOfMana}]}
+		| get GiftOfMana
+		/if (${${ArrayName}[${i}].Find[/GoM]}) /varset ${NewArrayName}[${i},${iGiftOfMana}] 1
+		/if (${printAll}) /echo GiftOfMana ${${NewArrayName}[${i},${iGiftOfMana}]}
 
-    | get iPctAggro
-    /if (${${ArrayName}[${i}].Find[/PctAggro|]}) {
-      /call argueString PctAggro| "${${ArrayName}[${i}]}"
-      /varset ${NewArrayName}[${i},${iPctAggro}] ${c_argueString}
-    } else {
-      |default PctAggro to 0, cast even when aggro target
-      /varset	${NewArrayName}[${i},${iPctAggro}] 0
-    }
-    /if (${printAll}) /echo PctAggro ${${NewArrayName}[${i},${iPctAggro}]}
+		| get iPctAggro
+		/if (${${ArrayName}[${i}].Find[/PctAggro|]}) {
+			/call argueString PctAggro| "${${ArrayName}[${i}]}"
+			/varset ${NewArrayName}[${i},${iPctAggro}] ${c_argueString}
+		} else {
+			|default PctAggro to 0, cast even when aggro target
+			/varset ${NewArrayName}[${i},${iPctAggro}] 0
+		}
+		/if (${printAll}) /echo PctAggro ${${NewArrayName}[${i},${iPctAggro}]}
 
-    | get iZone - only for curing
-    /if (${${ArrayName}[${i}].Find[/Zone|]}) {
-      /call argueString Zone| "${${ArrayName}[${i}]}"
-      /varset ${NewArrayName}[${i},${iZone}] ${c_argueString}
-    } else {
-      |default to All zones
-      /varset	${NewArrayName}[${i},${iZone}] All
-    }
-    /if (${printAll}) /echo Zone ${${NewArrayName}[${i},${iZone}]}
+		| get iZone - only for curing
+		/if (${${ArrayName}[${i}].Find[/Zone|]}) {
+			/call argueString Zone| "${${ArrayName}[${i}]}"
+			/varset ${NewArrayName}[${i},${iZone}] ${c_argueString}
+		} else {
+			|default to All zones
+			/varset	${NewArrayName}[${i},${iZone}] All
+		}
+		/if (${printAll}) /echo Zone ${${NewArrayName}[${i},${iZone}]}
 
-  | get iMinSick - only for curing
-    /if (${${ArrayName}[${i}].Find[/MinSick|]}) {
-      /call argueString MinSick| "${${ArrayName}[${i}]}"
-      /varset ${NewArrayName}[${i},${iMinSick}] ${c_argueString}
-    } else {
-      /varset	${NewArrayName}[${i},${iMinSick}] 0
-    }
-    /if (${printAll}) /echo Zone ${${NewArrayName}[${i},${iMinSick}]}
-    | get iIfs - conditionals used in various places
-    /if (${${ArrayName}[${i}].Find[/Ifs|]}) {
-        /call argueString Ifs| "${${ArrayName}[${i}]}"
-        /varset ${NewArrayName}[${i},${iIfs}] ${Ini[${Character_Ini},Ifs,${c_argueString},NULL,noparse]}
-        | we kind of need to print here instead of like everything else :P
-        /if (${printAll}) /echo Ifs ${c_argueString}
-    } else {
-        /varset ${NewArrayName}[${i},${iIfs}] TRUE
-        /if (${printAll}) /echo Ifs TRUE
-    }
-    |default casting while invis to 0 which impies no casting while invis
-    /varset	${NewArrayName}[${i},${iCastInvis}] 0
+		| get iMinSick - only for curing
+		/if (${${ArrayName}[${i}].Find[/MinSick|]}) {
+			/call argueString MinSick| "${${ArrayName}[${i}]}"
+			/varset ${NewArrayName}[${i},${iMinSick}] ${c_argueString}
+		} else {
+			/varset	${NewArrayName}[${i},${iMinSick}] 0
+		}
+		/if (${printAll}) /echo Zone ${${NewArrayName}[${i},${iMinSick}]}
+
+		| get iIfs - conditionals used in various places
+		/if (${${ArrayName}[${i}].Find[/Ifs|]}) {
+			/call argueString Ifs| "${${ArrayName}[${i}]}"
+			/varset ${NewArrayName}[${i},${iIfs}] ${Ini[${Character_Ini},Ifs,${c_argueString},NULL,noparse]}
+			| we kind of need to print here instead of like everything else :P
+			/if (${printAll}) /echo Ifs ${c_argueString}
+		} else {
+			/varset ${NewArrayName}[${i},${iIfs}] TRUE
+			/if (${printAll}) /echo Ifs TRUE
+		}
+
+		| get iPctHP
+		/if (${${ArrayName}[${i}].Find[/PctHP|]}) {
+			/call argueString PctHP| "${${ArrayName}[${i}]}"
+			/varset ${NewArrayName}[${i},${iPctHP}] ${c_argueString}
+		} else {
+			/varset ${NewArrayName}[${i},${iPctHP}] 100
+		}
+		/if (${printAll}) /echo PctHP ${${NewArrayName}[${i},${iPctHP}]}
+		
+		| get iPctMaxAggro
+		/if (${${ArrayName}[${i}].Find[/PctMaxAggro|]}) {
+			/call argueString PctMaxAggro| "${${ArrayName}[${i}]}"
+			/varset ${NewArrayName}[${i},${iPctMaxAggro}] ${c_argueString}
+		} else {
+			|default PctAggro to 0, cast even when aggro target
+			/varset ${NewArrayName}[${i},${iPctMaxAggro}] 0
+		}
+		/if (${printAll}) /echo PctMaxAggro ${${NewArrayName}[${i},${iPctMaxAggro}]}
+
+		|default casting while invis to 0 which implies no casting while invis
+		/varset ${NewArrayName}[${i},${iCastInvis}] 0
 		/if (${printAll}) /echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		/next i
+
+	/next i
 	|/deletevar ${ArrayName}
 /RETURN	${NewArrayName}
 
@@ -780,7 +806,7 @@ SUB TrueTarget(TargetID)
 			/squelch /target id ${TargetID}
 			/delay 3s ${Target.ID} == ${TargetID}
 	} else {
-		/echo TrueTarget has no spawncount
+		/echo TrueTarget ${TargetID} has no spawncount
 	}
 /RETURN
 |------------------------------------------------------------------------------------|
@@ -958,7 +984,6 @@ Sub check_selectedBots(selectedBots, ChatSender)
 /return ${botSelected}
 |--------------------------------------------------------------------------|
 SUB checkEventArgs(ChatSender, eventLine, UZR, ArgData)
-  |/gu CEA ChatSender ${ChatSender} | el ${eventLine} | uz ${UZR} | ad ${ArgData}
   /varset c_eventArg FALSE
   /varset c_eventArgData
   /varset c_eventArgChatSender
@@ -972,14 +997,16 @@ SUB checkEventArgs(ChatSender, eventLine, UZR, ArgData)
   /if (${ChatSender.Equal[MQ2]})            /varset ChatSender ${Me.CleanName}
   /if (${ChatSender.Right[5].Equal[(msg)]}) /varset ChatSender ${ChatSender.Left[-5]}
 
+  |/echo checkEventArgs eventLine <${eventLine}> UZR <${UZR}> ArgData <${ArgData}>
+  
   /if (${UZR.Find[U]} && !${NetBots[${ChatSender}].ID})     /varset userValidated FALSE
   /if (${UZR.Find[Z]} && !${NetBots[${ChatSender}].InZone}) /varset inZone FALSE
   /if (${UZR.Find[R]} && (${Spawn[pc =${ChatSender}].Distance}>${LeashLength} || ${Spawn[pc =${ChatSender}].DistanceZ}>150)) /varset inRange FALSE
-  |/echo ${eventLine.Right[1].Equal[']} ${eventLine} ${eventLine.Left[-1]}
   /if (${eventLine.Right[1].Equal[']}) /varset eventLine ${eventLine.Left[-1]}
   /if (${eventLine.Find[/only|]}) {
     /varset includeBot FALSE
     /call argueString only| "${eventLine}"
+	|/echo checkEventArgs: argueString /Only returned ${c_argueString}
     /if (${check_selectedBots[${c_argueString},${ChatSender}]}) /varset includeBot TRUE
   }
   /if (${eventLine.Find[/exclude|]}) {
@@ -1004,7 +1031,7 @@ SUB checkEventArgs(ChatSender, eventLine, UZR, ArgData)
       /varset c_eventArgData ${ArgData}
     }
   }
-  |/echo cs ${ChatSender} ad ${ArgData} find ${ArgData.Find[/]} erd ${c_eventArgData}
+  |/echo checkEventArgs: chatSender ${ChatSender} includeBot ${includeBot} inZone ${inZone} inRange ${inZone} c_eventArg ${c_eventArg} c_eventArgData ${c_eventArgData}
 /RETURN ${c_eventArg}
 
 |----------------------------------------------------------------------------|

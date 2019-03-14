@@ -1,18 +1,21 @@
 #event OutOfStuff "You are missing some required components."
 
+
+| WARNING!!! Will destroy the item on the cursor
 Sub Main(gemNumber, delay)
 	
 	:Loop
-	/if (${Cursor.ID}) /autoinv
+	/if (${Cursor.ID}) /destroy
 	/doevents
 	/if (${Me.PctMana} < 20) {
 		/sit on
-		/delay 15s
-		/goto :Loop
+		:loop2
+		/delay 15s ${Me.PctMana}>=99
+		/if (${Me.PctMana} < 99) /goto :Loop2
 	}
 	/delay ${delay}
 	/if (!${Me.SpellReady[${gemNumber}]}) {
-		/if (${Cursor.ID}) /autoinv
+		/if (${Cursor.ID}) /destroy
 		/goto :Loop
 	} else {
 		/cast ${gemNumber}

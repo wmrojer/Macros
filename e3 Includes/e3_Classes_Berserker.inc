@@ -14,20 +14,20 @@ SUB BER_Background_Events
 |----------------------------------------------------------------------------|
 SUB CheckAxes
   /if (${Defined[axeAbility2D]}) {
-    /declare i int local
-    /for i 1 to ${axeAbility2D.Size[1]}
-    /declare numAxes int local ${axeAbility2D[${i},${iCheckFor}]}
-    /if (!${Bool[${numAxes}]}) /varset numAxes 20
-      /if (${FindItemCount[${axeAbility2D[${i},${iCastName}]}]} < ${numAxes}) {
-        /call check_Ready "axeAbility2D" ${i}
-        /if (${c_Ready}) {
-          /bc I only have ${FindItemCount[${axeAbility2D[${i},${iCastName}]}]} ${axeAbility2D[${i},${iCastName}]} left, summoning a stack
-          /call e3_cast ${Me.ID} "axeAbility2D" ${i}
-          /delay 5s ${Cursor.ID}
-          /call ClearCursor
-        }
-      }
-    /if (!${ActionTaken}) /next i
+	  /declare i int local
+	  /for i 1 to ${axeAbility2D.Size[1]}
+	  /declare numAxes int local ${axeAbility2D[${i},${iCheckFor}]}
+	  /if (!${Bool[${numAxes}]}) /varset numAxes 20
+		/if (${FindItemCount[${axeAbility2D[${i},${iCastName}]}]} < ${numAxes}) {
+		  /call check_Ready "axeAbility2D" ${i}
+		  /if (${c_Ready}) {
+			/bc I only have ${FindItemCount[${axeAbility2D[${i},${iCastName}]}]} ${axeAbility2D[${i},${iCastName}]} left, summoning a stack
+			/call e3_cast ${Me.ID} "axeAbility2D" ${i}
+			/delay 5s ${Cursor.ID}
+			/call ClearCursor
+		  }
+		}
+	  /if (!${ActionTaken}) /next i
   }
 /RETURN
 |----------------------------------------------------------------------------|

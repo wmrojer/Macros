@@ -1,3 +1,31 @@
+
+V7.0
+
+Made bots meditate even when they are on follow, since I tend to have them on follow almost all the time.
+Fixed saving/loading of bard songs. (Guess it got missed when the way things are saved to the ini changed. Need the #1, #2 after the "song" for the script to be able to save)
+Fixed/changed formatting for item names in loot settings.ini to actually match the items value. Was faulty before, all items worth more then 1s was named as they where worth 1p instead. But I guess there are still cases where there are more then one item with the same name, but changing so the loot settings is stored by item id would make manually editing it very difficult. And item value is very nice to have in there to know what to keep.
+Added "Check Loot Setting Cursor" that tells what setting is stored in Loot Settings.ini for the item you have on the cursor. (Needs the item on the cursor to be able to get all the item properties)
+Added "Set Loot Setting Cursor /#2#" to update the setting stored in Loot Settings.ini for the item you have on the cursor.
+Moved AutoMedBreak PctMana from general settings.ini to the bots ini. Different classes have totally different needs to meditate. I prefer to have my cleric on full mana, while my palladin is fine with 50%.
+Added "Caster" as an Assist Type. It will move the bot into Range and Line of Sight of the assist target.
+Added "FollowDist #1" to change follow Distance changable on the fly. (Not saved)
+Added "Set maxMeleePct #1" to change melee distance on the fly. Needed for tight old world dungeons to keep the bots from falling down edges when the backs away to far.
+Made auto loot on mob death (Exp gain) configurable. I found it very annoying to have my bots auto loot mid fight, but I still want to be able to tell them to loot.
+Added "LootIt" command to initiate looting for bots with auto loot enabled.
+Added "Loot Item #1 #2 #3 #4" command to be able to tell a specific bot to loot a specific item and optionaly equip it. (Script from this thread, but modified since it didn't work properly)
+Added "Open Closes Corpse" command just because EQ is so f***up with targeting and opening corpses when there are PC close by.
+Added and Out Of Combat Heal function to all healers so they automatically heals everyone to "full" (configurable) HP between fights. Requires that both the healer and the target is out of combat. (Nothing worse then having the cleric cast a heal on the puller right as he comes in with a load of mobs)
+Added "SayIt", almost like bark but without the check for an response so no spamming.
+Added option "/PctHP|xx" for spells/abilities so bots don't use a spell or ability before the target has less then defined % HP. (Make nukes wait a bit before starting to nuke.) Usable on all spells and abilities in the bots ini that targets a mob.
+Added option "/PchMaxAggro|xx" for spells/abilities. Opposite to "/PctAggro|xx", bot will only use spell/ability if there aggro is less then specified. (Make nukes stop before they actually becomes the target.) Usable on all spells and abilities in the bots ini that targets a mob.
+The assist callers attack is not turned off by the macro when the assist target dies. (I run the puller and call assist, but often change to the next target before the first dies. So annoying to have attack just turn off)
+Worked a bit on the e3_Tanking, but not gotten it to work good. But at least it will no longer pingpong back and forth between targets if you have 2 or more mobs with less then 15% hp.
+
+
+Done a lot of code optimization to try and improve performance. (Like why check all heal spells for bots that aren't even in the same zone, and other things like that)
+Removed a lot of "/if (${Debug}) /echo......" since that is code that is actually executed all the time even thou nothing is output. There are better ways of debugging.
+
+
 --------- To Dos:
 
 . Create a default routes file, with routes from the guild lobby to common destinations
