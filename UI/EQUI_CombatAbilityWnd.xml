@@ -1123,7 +1123,7 @@
 		<Style_Transparent>false</Style_Transparent>
 		<DrawTemplate>WDT_Rounded</DrawTemplate>
 		<Style_Titlebar>false</Style_Titlebar>
-		<Style_Qmarkbox>true</Style_Qmarkbox>
+		<Style_Qmarkbox>false</Style_Qmarkbox>
 		<Style_Closebox>true</Style_Closebox>
 		<Style_Minimizebox>true</Style_Minimizebox>
 		<Style_Border>true</Style_Border>
